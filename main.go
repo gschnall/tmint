@@ -1,5 +1,5 @@
 package main
-
+// r -> rename session
 import (
 	"fmt"
 	"io/ioutil"
@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+  twiz "github.com/gschnall/tmint/tmux_wizard"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -20,7 +22,7 @@ import (
 var (
 	isUserPaneZoomed       = false
 	viewArr                = []string{"header", "sessions", "preview"}
-	sessionData            = getSessionData()
+	sessionData            = twiz.GetSessionData()
 	active                 = 0
 	tviewApp               = tview.NewApplication()
 	previewDisplay         = tview.NewTextView()
@@ -110,30 +112,30 @@ func formatSessionId(id int) string {
 	if id < 10 {
 		return "(" + strconv.Itoa(id) + ")  "
 	} else if id < 36 {
-		letter := toCharStr(id - 9)
+		letter := twiz.ToCharStr(id - 9)
 		return "(M-" + letter + ")"
 	}
 	return ""
 }
 
-func handleChangeSession(session Session, node *tview.TreeNode) {
+func handleChangeSession(session twiz.Session, node *tview.TreeNode) {
 	sessionDisplaySess = node
 	previewDisplay.Clear()
-	previewDisplay.SetText(tview.TranslateANSI(session.preview))
-	previewDisplay.SetTitle(" " + session.name)
+	previewDisplay.SetText(tview.TranslateANSI(session.Preview))
+	previewDisplay.SetTitle(" " + session.Name)
 	previewDisplay.ScrollToBeginning()
 }
-func handleChangeWindow(window Window, node *tview.TreeNode) {
+func handleChangeWindow(window twiz.Window, node *tview.TreeNode) {
 	sessionDisplayWind = node
 	previewDisplay.Clear()
-	previewDisplay.SetText(tview.TranslateANSI(window.preview))
-	previewDisplay.SetTitle(" " + window.index + " (" + window.name + ")")
+	previewDisplay.SetText(tview.TranslateANSI(window.Preview))
+	previewDisplay.SetTitle(" " + window.Index + " (" + window.Name + ")")
 	previewDisplay.ScrollToBeginning()
 }
-func handleChangePane(pane Pane, node *tview.TreeNode) {
+func handleChangePane(pane twiz.Pane, node *tview.TreeNode) {
 	previewDisplay.Clear()
-	previewDisplay.SetText(tview.TranslateANSI(pane.preview))
-	previewDisplay.SetTitle(" " + pane.name + " - " + pane.directory)
+	previewDisplay.SetText(tview.TranslateANSI(pane.Preview))
+	previewDisplay.SetTitle(" " + pane.Name + " - " + pane.Directory)
 	previewDisplay.ScrollToBeginning()
 }
 
@@ -149,9 +151,9 @@ func collapseNode(node *tview.TreeNode, moveNodes bool) {
 	if moveNodes {
 		tmux := node.GetReference()
 		switch tmux.(type) {
-		case Window:
+		case twiz.Window:
 			sessionDisplay.SetCurrentNode(sessionDisplaySess)
-		case Pane:
+		case twiz.Pane:
 			sessionDisplay.SetCurrentNode(sessionDisplayWind)
 		}
 	}
@@ -180,8 +182,8 @@ func toggleSearchBox() {
 	searchBoxDisplayHeight = height
 	mainFlexBoxView.ResizeItem(searchBoxDisplay, 0, height)
 }
-func startCreateSession() {
-	initCreationForm()
+func startCreateForm(creation string) {
+	initCreationForm(creation)
 	changeViewTo(creationForm)
 }
 func endCreateSession() {
@@ -234,7 +236,7 @@ func highlightNodeDotPath(path string) {
 	}
 }
 func highlightSessionNode(index int) {
-	if index > -1 && index < len(sessionData.sessions) {
+	if index > -1 && index < len(sessionData.Sessions) {
 		highlightNode(index)
 	}
 }
@@ -297,9 +299,11 @@ func initSessionDisplayKeys() {
 			}
 		case '?':
 			toggleHelpBox()
-		case 's':
+		case 'w':
 			if event.Modifiers() == tcell.ModAlt {
 				highlightSessionNode(int(event.Rune()) - 87)
+			} else {
+				startCreateForm("window")
 			}
 		case 'x':
 			if event.Modifiers() == tcell.ModAlt {
@@ -309,14 +313,14 @@ func initSessionDisplayKeys() {
 			}
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			highlightSessionNode(int(event.Rune() - '0'))
-		case 'c':
+		case 's':
 			if event.Modifiers() == tcell.ModAlt {
 				highlightSessionNode(int(event.Rune()) - 87)
 			} else {
-				startCreateSession()
+				startCreateForm("session")
 			}
 
-		case 'a', 'b', 'e', 'f', 'g', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'r', 't', 'u', 'v', 'w', 'y', 'z':
+		case 'a', 'b', 'c', 'e', 'f', 'g', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'r', 't', 'u', 'v', 'y', 'z':
 			if event.Modifiers() == tcell.ModAlt {
 				highlightSessionNode(int(event.Rune()) - 87)
 			}
@@ -326,61 +330,61 @@ func initSessionDisplayKeys() {
 	})
 }
 
-func getSessionDisplayName(session Session, isExpanded bool) string {
+func getSessionDisplayName(session twiz.Session, isExpanded bool) string {
 	mark := "+ "
 	if isExpanded {
 		mark = "- "
 	}
-	return formatSessionId(session.id) + mark + getColoredSessionName(session.name, session.isAttached)
+	return formatSessionId(session.Id) + mark + getColoredSessionName(session.Name, session.IsAttached)
 }
 
-func getWindowDisplayName(window Window, isExpanded bool) string {
+func getWindowDisplayName(window twiz.Window, isExpanded bool) string {
 	if isExpanded {
-		return " - " + window.index + ": " + window.name + " (" + strconv.Itoa(len(window.panes)) + " panes)"
+		return " - " + window.Index + ": " + window.Name + " (" + strconv.Itoa(len(window.Panes)) + " panes)"
 	}
-	return " + " + window.index + ": " + window.name + " (" + strconv.Itoa(len(window.panes)) + " panes)"
+	return " + " + window.Index + ": " + window.Name + " (" + strconv.Itoa(len(window.Panes)) + " panes)"
 }
-func getPaneDisplayName(pane Pane, isExpanded bool) string {
+func getPaneDisplayName(pane twiz.Pane, isExpanded bool) string {
 	if isExpanded {
-		return pane.name + ": " + pane.command
+		return pane.Name + ": " + pane.Command
 	}
-	return pane.name + ": " + pane.command
+	return pane.Name + ": " + pane.Command
 }
 
-func toggleSessionName(session Session, node *tview.TreeNode) {
+func toggleSessionName(session twiz.Session, node *tview.TreeNode) {
 	node.SetText(getSessionDisplayName(session, node.IsExpanded()))
 }
-func toggleWindowName(window Window, node *tview.TreeNode) {
+func toggleWindowName(window twiz.Window, node *tview.TreeNode) {
 	node.SetText(getWindowDisplayName(window, node.IsExpanded()))
 }
-func togglePaneName(pane Pane, node *tview.TreeNode) {
+func togglePaneName(pane twiz.Pane, node *tview.TreeNode) {
 	node.SetText(getPaneDisplayName(pane, node.IsExpanded()))
 }
 
-func getSessionFromRef(ids []int) Session {
-	return sessionData.sessions[ids[0]]
+func getSessionFromRef(ids []int) twiz.Session {
+	return sessionData.Sessions[ids[0]]
 }
-func getWindowFromRef(ids []int) Window {
-	return sessionData.sessions[ids[0]].windows[ids[1]]
+func getWindowFromRef(ids []int) twiz.Window {
+	return sessionData.Sessions[ids[0]].Windows[ids[1]]
 }
-func getPaneFromRef(ids []int) Pane {
-	return sessionData.sessions[ids[0]].windows[ids[1]].panes[ids[2]]
+func getPaneFromRef(ids []int) twiz.Pane {
+	return sessionData.Sessions[ids[0]].Windows[ids[1]].Panes[ids[2]]
 }
 
-type SessionFunc func(Session, *tview.TreeNode)
-type WindowFunc func(Window, *tview.TreeNode)
-type PaneFunc func(Pane, *tview.TreeNode)
+type SessionFunc func(twiz.Session, *tview.TreeNode)
+type WindowFunc func(twiz.Window, *tview.TreeNode)
+type PaneFunc func(twiz.Pane, *tview.TreeNode)
 
 func runCallbacksForNode(node *tview.TreeNode, sfunc SessionFunc, wfunc WindowFunc, pfunc PaneFunc) {
 	// idArr := node.GetReference().([]int)
 	tmux := node.GetReference()
 	switch tmux.(type) {
-	case Session:
-		sfunc(tmux.(Session), node)
-	case Window:
-		wfunc(tmux.(Window), node)
-	case Pane:
-		pfunc(tmux.(Pane), node)
+	case twiz.Session:
+		sfunc(tmux.(twiz.Session), node)
+	case twiz.Window:
+		wfunc(tmux.(twiz.Window), node)
+	case twiz.Pane:
+		pfunc(tmux.(twiz.Pane), node)
 	}
 
 	// if len(idArr) == 1 {
@@ -404,19 +408,19 @@ func initSessionDisplay() {
 		// - BUG - Breaks right now - https://github.com/rivo/tview/issues/314
 		// SetBackgroundColor(tcell.ColorDefault)
 
-	for sInd, session := range sessionData.sessions {
+	for sInd, session := range sessionData.Sessions {
 		sNode := tview.NewTreeNode(getSessionDisplayName(session, false))
 		sNode.SetSelectable(true).SetExpanded(false)
 		// sNode.SetReference([]int{session.id})
 		sNode.SetReference(session)
-		for _, window := range session.windows {
+		for _, window := range session.Windows {
 			wNode := tview.NewTreeNode(getWindowDisplayName(window, false))
 			// wNode.SetReference([]int{session.id, wInd})
 			wNode.SetReference(window)
 			wNode.SetExpanded(false)
 			wNode.SetSelectable(true)
 			wNode.SetIndent(6)
-			for _, pane := range window.panes {
+			for _, pane := range window.Panes {
 				pNode := tview.NewTreeNode(getPaneDisplayName(pane, false))
 				// pNode.SetReference([]int{session.id, wInd, pInd})
 				pNode.SetReference(pane)
@@ -428,7 +432,7 @@ func initSessionDisplay() {
 		if sInd == 0 {
 			sessionDisplay.SetCurrentNode(sNode)
 		}
-		if session.isAttached {
+		if session.IsAttached {
 			sNode.SetColor(tcell.ColorLimeGreen)
 		}
 		root.AddChild(sNode)
@@ -455,7 +459,7 @@ func initSessionDisplay() {
 	// })
 }
 func refreshSessionDisplay() {
-	sessionData = getSessionData()
+	sessionData = twiz.GetSessionData()
 	initSessionDisplay()
 }
 
@@ -466,8 +470,8 @@ func initPreviewDisplay() {
 	// 	tviewApp.Draw()
 	// })
 	previewDisplay.SetBackgroundColor(tcell.ColorDefault)
-	previewDisplay.SetBorder(true).SetTitle(" " + sessionData.sessions[0].name).SetTitleAlign(0)
-	previewDisplay.SetText(tview.TranslateANSI(sessionData.sessions[0].preview))
+	previewDisplay.SetBorder(true).SetTitle(" " + sessionData.Sessions[0].Name).SetTitleAlign(0)
+	previewDisplay.SetText(tview.TranslateANSI(sessionData.Sessions[0].Preview))
 	previewDisplay.ScrollToBeginning()
 }
 
@@ -479,12 +483,17 @@ func initHelpBoxDisplay() {
 	// Create full guide for users to view from app
 	helpTextList := [][]string{
 		{"", "arrow keys to navigate"},
-		{"", "hjkl to navigate"},
+		{"", "or hjkl to navigate"},
 		{"", ""},
-		{"c", "create session"},
-		{"x", "delete target"},
-		{"?", "toggle help"},
 		{"/", "search | Ctrl-s"},
+		{"c", "create session"},
+		{"w", "create window"},
+		{"x", "delete target"},
+		{"r", "rename target"},
+		{"e", "expand node"},
+		{"E", "collapse node"},
+		{"?", "toggle help"},
+		{"Ctrl-e", "toggle expand/collapse all"},
 	}
 
 	for ind, rowList := range helpTextList {
@@ -493,52 +502,96 @@ func initHelpBoxDisplay() {
 	}
 }
 
+func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
+	if search == "" {
+		return sessionDisplay.GetCurrentNode() 
+	}
+	search = strings.ToLower(search)
+
+	queue := make([]*tview.TreeNode, 0)
+	queue = append(queue, root)
+
+	matchContains := make([]*tview.TreeNode, 0)
+
+	for len(queue) > 0 {
+		nextUp := queue[0]
+		queue = queue[1:]
+
+		nodeName := ""
+
+		tmux := nextUp.GetReference()
+		switch tmux.(type) {
+		case twiz.Session:
+			nodeName = strings.ToLower(tmux.(twiz.Session).Name)
+		case twiz.Window:
+			nodeName = strings.ToLower(tmux.(twiz.Window).Name)
+		case twiz.Pane:
+			nodeName = strings.ToLower(tmux.(twiz.Pane).Name)
+		}
+
+		matchStart, _ := regexp.MatchString("(?i)^"+search, nodeName)
+		if matchStart {
+			return nextUp
+		} else if strings.Contains(nodeName, search) {
+			matchContains = append(matchContains, nextUp)	
+		}
+
+		nextUpChildren := nextUp.GetChildren()
+		if len(nextUpChildren) > 0 {
+			for _, child := range nextUpChildren {
+				queue = append(queue, child)
+			}
+		}
+	}
+
+	if len(matchContains) > 0 {
+		return matchContains[0]
+	}
+	return nil
+}
+
+// func searchForTmuxNode(search string, path string) string {
+// 	if search == "" {
+// 		return ""
+// 	}
+
+// 	sNodes := sessionDisplay.GetRoot().GetChildren()
+// 	matchedPrefix := -1
+// 	matchedContain := -2
+
+// 	for i := len(sNodes) - 1; i >= 0; i-- {
+// 		sNode := sNodes[i]
+// 		// sNodeIDArr := sNode.GetReference().([]int)
+// 		session := sNode.GetReference().(twiz.Session)
+// 		// session := getSessionFromRef(sNodeIDArr)
+
+// 		matchStart, _ := regexp.MatchString("(?i)^"+search, session.Name)
+// 		matchContain := strings.Contains(session.Name, search)
+// 		if matchStart {
+// 			matchedPrefix = session.Id
+// 		} else if matchContain {
+// 			matchedContain = session.Id
+// 		}
+// 	}
+
+// 	if matchedPrefix != -1 {
+// 		return matchedPrefix
+// 	} else if matchedContain != -1 {
+// 		return matchedContain
+// 	}
+// }
+
 func initSearchBoxDisplay() {
 	searchBoxDisplay.
 		SetLabel("Search: ").
 		SetFieldWidth(32)
 	searchBoxDisplay.SetBorder(true)
 	searchBoxDisplay.Box.SetBorderPadding(1, 1, 1, 1)
-	// TODO: DOT . navigation to children of highlighted nodes
-	// ----- SearchTerm.0.10 -> should accept any number child
 	searchBoxDisplay.SetChangedFunc(func(text string) {
-
 		// sessionDisplay.GetRoot().CollapseAll()
-
-		// parts := strings.Split(text, ".")
-		// currentNode := sessionDisplay.GetCurrentNode()
-		// sessionChildren := currentNode.GetChildren()
-
-		if strings.Contains(text, ".") {
-			highlightNodeDotPath(text)
-		} else {
-			sNodes := sessionDisplay.GetRoot().GetChildren()
-			matchedPrefix := -1
-			matchedContain := -2
-
-			for i := len(sNodes) - 1; i >= 0; i-- {
-				sNode := sNodes[i]
-				// sNodeIDArr := sNode.GetReference().([]int)
-				session := sNode.GetReference().(Session)
-				// session := getSessionFromRef(sNodeIDArr)
-				if text == "" {
-					return
-				}
-
-				matchStart, _ := regexp.MatchString("(?i)^"+text, session.name)
-				matchContain := strings.Contains(session.name, text)
-				if matchStart {
-					matchedPrefix = session.id
-				} else if matchContain {
-					matchedContain = session.id
-				}
-			}
-
-			if matchedPrefix != -1 {
-				highlightSessionNode(matchedPrefix)
-			} else if matchedContain != -1 {
-				highlightSessionNode(matchedContain)
-			}
+		searchedForNode := breadthFirstSearch(sessionDisplay.GetRoot(), text)
+		if searchedForNode != nil {
+			sessionDisplay.SetCurrentNode(searchedForNode)
 		}
 	})
 
@@ -610,7 +663,7 @@ func initDirectoryInputField() {
 		} else if len(text) > 1 && text[0:2] == "~/" {
 			home, homeDirErr := os.UserHomeDir()
 			if homeDirErr != nil {
-				handleExecError(homeDirErr, "initDirectoryInputField")
+				twiz.HandleExecError(homeDirErr, "initDirectoryInputField")
 			}
 			text = home + "/" + text[2:]
 		}
@@ -626,19 +679,40 @@ func initDirectoryInputField() {
 	})
 }
 
+// Add regex to prevent invalid characters
+func createNewWindow() {
+	currentSessionName := sessionDisplaySess.GetReference().(twiz.Session).Name
+	sName := creationFormName
+	pCount := creationFormPaneCount
+	sDir := directoryInputField.GetText()
+	if sDir == "" {
+		homeDir, homeDirErr := os.UserHomeDir()
+		twiz.HandleExecError(homeDirErr, "createNewWindow")
+		sDir = homeDir
+	}
+	if pCount == 1 {
+		previewDisplay.SetTitle(sName + " " + sDir)
+	}
+	twiz.CreateTmuxWindow(creationFormName, directoryInputField.GetText(), creationFormPaneCount, currentSessionName)
+	endCreateSession()
+	time.Sleep(200 * time.Millisecond)
+	refreshSessionDisplay()
+}
+
+// Add regex to prevent invalid characters
 func createNewSession() {
 	sName := creationFormName
 	pCount := creationFormPaneCount
 	sDir := directoryInputField.GetText()
 	if sDir == "" {
 		homeDir, homeDirErr := os.UserHomeDir()
-		handleExecError(homeDirErr, "createNewSession")
+		twiz.HandleExecError(homeDirErr, "createNewSession")
 		sDir = homeDir
 	}
 	if pCount == 1 {
 		previewDisplay.SetTitle(sName + " " + sDir)
 	}
-	createTmuxSession(creationFormName, directoryInputField.GetText(), creationFormPaneCount)
+	twiz.CreateTmuxSession(creationFormName, directoryInputField.GetText(), creationFormPaneCount)
 	endCreateSession()
 	time.Sleep(200 * time.Millisecond)
 	refreshSessionDisplay()
@@ -647,43 +721,43 @@ func switchTmuxToCurrentNode() {
 	tviewApp.Stop()
 
 	tmux := sessionDisplay.GetCurrentNode().GetReference()
-	if sessionData.hasAttachedSession {
+	if sessionData.HasAttachedSession {
 		switch tmux.(type) {
-		case Session:
-			switchToTmuxPath(tmux.(Session).name)
-		case Window:
-			switchToTmuxPath(tmux.(Window).path)
-		case Pane:
-			switchToTmuxPath(tmux.(Pane).path)
+		case twiz.Session:
+			twiz.SwitchToTmuxPath(tmux.(twiz.Session).Name)
+		case twiz.Window:
+			twiz.SwitchToTmuxPath(tmux.(twiz.Window).Path)
+		case twiz.Pane:
+			twiz.SwitchToTmuxPath(tmux.(twiz.Pane).Path)
 		}
 	} else {
 		switch tmux.(type) {
-		case Session:
-			attachTmuxSession(tmux.(Session).name)
-		case Window:
-			attachTmuxSession(tmux.(Window).session)
-		case Pane:
-			attachTmuxSession(tmux.(Pane).session)
+		case twiz.Session:
+			twiz.AttachTmuxSession(tmux.(twiz.Session).Name)
+		case twiz.Window:
+			twiz.AttachTmuxSession(tmux.(twiz.Window).Session)
+		case twiz.Pane:
+			twiz.AttachTmuxSession(tmux.(twiz.Pane).Session)
 		}
 	}
 }
-func handleKillSession(session Session, node *tview.TreeNode) {
-	killTmuxSession(session.name)
+func handleKillSession(session twiz.Session, node *tview.TreeNode) {
+	twiz.KillTmuxSession(session.Name)
 }
-func handleKillWindow(window Window, node *tview.TreeNode) {
-	killTmuxWindow(window.path)
+func handleKillWindow(window twiz.Window, node *tview.TreeNode) {
+	twiz.KillTmuxWindow(window.Path)
 }
-func handleKillPane(pane Pane, node *tview.TreeNode) {
-	killTmuxPane(pane.path)
+func handleKillPane(pane twiz.Pane, node *tview.TreeNode) {
+	twiz.KillTmuxPane(pane.Path)
 }
-func confirmKillSession(session Session, node *tview.TreeNode) {
-	confirmKillTarget("Session", session.name)
+func confirmKillSession(session twiz.Session, node *tview.TreeNode) {
+	confirmKillTarget("Session", session.Name)
 }
-func confirmKillWindow(window Window, node *tview.TreeNode) {
-	confirmKillTarget("Window", window.index)
+func confirmKillWindow(window twiz.Window, node *tview.TreeNode) {
+	confirmKillTarget("Window", window.Index)
 }
-func confirmKillPane(pane Pane, node *tview.TreeNode) {
-	confirmKillTarget("Pane", pane.index)
+func confirmKillPane(pane twiz.Pane, node *tview.TreeNode) {
+	confirmKillTarget("Pane", pane.Index)
 }
 func killTmuxTarget(node *tview.TreeNode, killTarget bool) {
 	if killTarget {
@@ -715,27 +789,32 @@ func restoreDefaultView() {
 func detachSession(node *tview.TreeNode) {
 	tmux := node.GetReference()
 	switch tmux.(type) {
-	case Session:
-		if tmux.(Session).isAttached {
+	case twiz.Session:
+		if tmux.(twiz.Session).IsAttached {
 			tviewApp.Stop()
 			time.Sleep(10 * time.Millisecond)
-			detachTmuxSession(tmux.(Session).name)
+			twiz.DetachTmuxSession(tmux.(twiz.Session).Name)
 		}
 	}
 }
 
-func initCreationForm() {
+func initCreationForm(creation string) {
+	creationForm.SetTitle("Create new " + creation)
 	creationForm.
 		AddInputField("Name", "", 20, nil, func(n string) {
 			creationFormName = n
 		}).
-		AddFormItem(directoryInputField).
+		AddFormItem(directoryInputField)
 		// AddDropDown("Panes", []string{"1", "2", "3", "4"}, 0, func(option string, ind int) {
 		// 	creationFormPaneCount = ind + 1
 		// }).
-		AddButton("Save", createNewSession).
-		AddButton("Cancel", endCreateSession)
-	creationForm.SetBorder(true).SetTitle(" Create New Session | ESC to cancel ").SetTitleAlign(tview.AlignLeft)
+		if creation == "window" {
+			creationForm.AddButton("Save", createNewWindow)
+		} else {
+			creationForm.AddButton("Save", createNewSession)
+		} 
+		creationForm.AddButton("Cancel", endCreateSession)
+	creationForm.SetBorder(true).SetTitle(fmt.Sprintf(" Create New %s | ESC to cancel ", creation)).SetTitleAlign(tview.AlignLeft)
 
 	initCreationFormKeys()
 }
@@ -743,7 +822,8 @@ func initCreationForm() {
 func initConfirmModal() {
 	confirmModal.SetTitle("ESC to Cancel")
 	confirmModal.SetBorder(true)
-	confirmModal.AddButtons([]string{"Yes", "No"}).
+
+	confirmModal.AddButtons([]string{"Yes (y)", "No (n)"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Yes" {
 				killTmuxTarget(targetedNode, true)
@@ -751,6 +831,31 @@ func initConfirmModal() {
 				flexBoxWrapper.HidePage("confirmModal")
 			}
 		})
+
+
+	// --- Need to create custom modal to capture keypresses ---
+	// yButton := confirmModal.GetButton(0)
+	// nButton := confirmModal.GetButton(1)
+	// yButton.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	// 	switch event.Rune() {
+	// 	case 'y':
+	// 		killTmuxTarget(targetedNode, true)
+	// 	case 'n':
+	// 		flexBoxWrapper.HidePage("confirmModal")
+	// 	}
+
+	// 	return event
+	// })
+	// nButton.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	// 	switch event.Rune() {
+	// 	case 'y':
+	// 		killTmuxTarget(targetedNode, true)
+	// 	case 'n':
+	// 		flexBoxWrapper.HidePage("confirmModal")
+	// 	}
+
+	// 	return event
+	// })
 }
 
 func initInterface() {
@@ -815,10 +920,10 @@ func setupCliApp() {
 		if c.Bool("i") {
 			fmt.Println(sessionData)
 		} else {
-			if sessionData.hasAttachedSession && !sessionData.hasZoomedPane {
-				tmuxToggleFullscreen()
+			if sessionData.HasAttachedSession && !sessionData.HasZoomedPane {
+				twiz.TmuxToggleFullscreen()
 			}
-			isUserPaneZoomed = sessionData.hasZoomedPane
+			isUserPaneZoomed = sessionData.HasZoomedPane
 			startApp()
 		}
 		return nil
@@ -836,6 +941,6 @@ func main() {
 
 	// On data refresh this will always be true - have to avoid setting it again
 	if !isUserPaneZoomed {
-		tmuxToggleFullscreen()
+		twiz.TmuxToggleFullscreen()
 	}
 }

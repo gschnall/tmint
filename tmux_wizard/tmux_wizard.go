@@ -1,4 +1,4 @@
-package main
+package tmux_wizard 
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 )
 
 // Command line funcs
-func handleExecError(err error, f string) {
+func HandleExecError(err error, f string) {
 	if err != nil {
 		fmt.Println("Exec Error: " + f)
 		fmt.Println(err.Error())
@@ -33,42 +33,42 @@ func debugExecError(cmd *exec.Cmd) {
 func clear() {
 	cmd := exec.Command("clear")
 	stdout, err := cmd.Output()
-	handleExecError(err, "clear")
+	HandleExecError(err, "clear")
 	fmt.Printf(string(stdout))
 }
 func getTmuxLs() string {
 	format := "#{session_attached} :: #{session_name} :: #{session_activity} :: #{window_zoomed_flag}"
 	cmd := exec.Command("tmux", "list-sessions", "-F", format)
 	stdout, err := cmd.Output()
-	handleExecError(err, "getTmuxLs")
+	HandleExecError(err, "getTmuxLs")
 	return string(stdout)
 }
 func getTmuxListWindows(sessionString string) string {
 	format := "#{window_active} :: #{window_index} :: #{window_name} :: #{window_activity}"
 	cmd := exec.Command("tmux", "list-window", "-F", format, "-t", sessionString)
 	stdout, err := cmd.Output()
-	handleExecError(err, "getTmuxListWindows")
+	HandleExecError(err, "getTmuxListWindows")
 	return string(stdout)
 }
 func getTmuxListPanes(windowPath string) string {
 	format := "#{pane_active} :: #{pane_index} :: #{pane_current_path} :: #{pane_current_command}"
 	cmd := exec.Command("tmux", "list-panes", "-F", format, "-t", windowPath)
 	stdout, err := cmd.Output()
-	handleExecError(err, windowPath)
+	HandleExecError(err, windowPath)
 	return string(stdout)
 }
 func getTmuxCapturePane(panePath string) string {
 	cmd := exec.Command("tmux", "capture-pane", "-pe", "-t", panePath)
 	stdout, err := cmd.Output()
-	handleExecError(err, "getTmuxCapturePane")
+	HandleExecError(err, "getTmuxCapturePane")
 	return string(stdout)
 }
-func switchToTmuxPath(path string) {
+func SwitchToTmuxPath(path string) {
 	cmd := exec.Command("tmux", "switch-client", "-t", path)
 	_, err := cmd.Output()
-	handleExecError(err, "switchToTmuxPath")
+	HandleExecError(err, "SwitchToTmuxPath")
 }
-func attachTmuxSession(sessionName string) {
+func AttachTmuxSession(sessionName string) {
 	cmd := exec.Command("tmux", "attach-session", "-t", sessionName)
 	// We need to connect tmux to our terminal
 	cmd.Stdin = os.Stdin
@@ -76,36 +76,46 @@ func attachTmuxSession(sessionName string) {
 	cmd.Stderr = os.Stderr
 
 	err := cmd.Run()
-	handleExecError(err, "attachTmuxSession")
+	HandleExecError(err, "AttachTmuxSession")
 }
-func killTmuxSession(sessionName string) {
+func RenameTmuxSession(sessionName string) {
+	cmd := exec.Command("tmux", "rename-session", "-t", sessionName)
+	_, err := cmd.Output()
+	HandleExecError(err, "RenameTmuxSession")
+}
+func RenameTmuxWindow(windowPath string) {
+	cmd := exec.Command("tmux", "rename-window", "-t", windowPath)
+	_, err := cmd.Output()
+	HandleExecError(err, "RenameTmuxWindow")
+}
+func KillTmuxSession(sessionName string) {
 	cmd := exec.Command("tmux", "kill-session", "-t", sessionName)
 	// cmd.Stdin = os.Stdin
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	_, err := cmd.Output()
-	handleExecError(err, "killTmuxSession")
+	HandleExecError(err, "KillTmuxSession")
 }
-func killTmuxWindow(windowPath string) {
+func KillTmuxWindow(windowPath string) {
 	cmd := exec.Command("tmux", "kill-window", "-t", windowPath)
 	// cmd.Stdin = os.Stdin
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	_, err := cmd.Output()
-	handleExecError(err, "killTmuxWindow")
+	HandleExecError(err, "KillTmuxWindow")
 }
-func killTmuxPane(panePath string) {
+func KillTmuxPane(panePath string) {
 	cmd := exec.Command("tmux", "kill-pane", "-t", panePath)
 	// cmd.Stdin = os.Stdin
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	_, err := cmd.Output()
-	handleExecError(err, "killTmuxPane")
+	HandleExecError(err, "KillTmuxPane")
 }
-func detachTmuxSession(sessionName string) {
+func DetachTmuxSession(sessionName string) {
 	cmd := exec.Command("tmux", "detach", "-s", sessionName)
 	_, err := cmd.Output()
-	handleExecError(err, "detachTmuxSession")
+	HandleExecError(err, "DetachTmuxSession")
 }
 
 func tmuxSplitPaneV(panePath string) {
@@ -114,7 +124,7 @@ func tmuxSplitPaneV(panePath string) {
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	_, err := cmd.Output()
-	handleExecError(err, "tmuxSplitPaneV")
+	HandleExecError(err, "tmuxSplitPaneV")
 }
 func tmuxSplitPaneH(panePath string) {
 	cmd := exec.Command("tmux", "split-window", "-d", "-h", "-c", "#{pane_current_path}", "-t", panePath)
@@ -122,15 +132,15 @@ func tmuxSplitPaneH(panePath string) {
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	_, err := cmd.Output()
-	handleExecError(err, "tmuxSplitPaneH")
+	HandleExecError(err, "tmuxSplitPaneH")
 }
-func createTmuxSession(name string, dir string, numberOfPanes int) {
+func CreateTmuxSession(name string, dir string, numberOfPanes int) {
 	cmd := exec.Command("tmux", "new", "-d", "-s", strings.TrimSpace(name), "-c", dir)
 	// cmd.Stdin = os.Stdin
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	_, err := cmd.Output()
-	handleExecError(err, "createTmuxSession")
+	HandleExecError(err, "CreateTmuxSession")
 	if numberOfPanes == 2 {
 		tmuxSplitPaneV(name + ":0")
 	} else if numberOfPanes == 3 {
@@ -143,13 +153,13 @@ func createTmuxSession(name string, dir string, numberOfPanes int) {
 	}
 }
 
-func createTmuxWindow(name string, dir string, numberOfPanes int) {
-	cmd := exec.Command("tmux", "new-window", "-d", "-n", strings.TrimSpace(name), "-c", dir)
+func CreateTmuxWindow(name string, dir string, numberOfPanes int, targetSession string) {
+	cmd := exec.Command("tmux", "new-window", "-d", "-n", strings.TrimSpace(name), "-c", dir, "-t", targetSession)
 	// cmd.Stdin = os.Stdin
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	_, err := cmd.Output()
-	handleExecError(err, "createTmuxWindow")
+	HandleExecError(err, "CreateTmuxWindow")
 	if numberOfPanes == 2 {
 		tmuxSplitPaneV(name + ":0")
 	} else if numberOfPanes == 3 {
@@ -162,16 +172,16 @@ func createTmuxWindow(name string, dir string, numberOfPanes int) {
 	}
 }
 
-func tmuxToggleFullscreen() {
+func TmuxToggleFullscreen() {
 	cmd := exec.Command("tmux", "resize-pane", "-Z")
 	_, err := cmd.Output()
-	handleExecError(err, "tmuxToggleFullscreen")
+	HandleExecError(err, "TmuxToggleFullscreen")
 }
 
 func tmuxSendKeys(panePath string, command string) {
 	cmd := exec.Command("tmux", "send-keys", "-t", panePath, command, "Enter")
 	_, err := cmd.Output()
-	handleExecError(err, "tmuxSendKeys")
+	HandleExecError(err, "tmuxSendKeys")
 }
 
 func getTmuxSessionList() []string {
@@ -191,19 +201,19 @@ func parseSessionString(sessionString string) (bool, string, string, bool) {
 	a := strings.Split(sessionString, " :: ")
 	numberAttachedTo, err := strconv.Atoi(a[0])
 	zoomedFlag, err := strconv.Atoi(a[3])
-	handleExecError(err, "parseSessionString")
+	HandleExecError(err, "parseSessionString")
 	return numberAttachedTo > 0, a[1], a[2], zoomedFlag > 0
 }
 func parseWindowString(windowString string) (bool, string, string, string) {
 	a := strings.Split(windowString, " :: ")
 	isActive, err := strconv.Atoi(a[0])
-	handleExecError(err, "parseWindowString")
+	HandleExecError(err, "parseWindowString")
 	return isActive > 0, a[1], a[2], a[3]
 }
 func parsePaneString(paneString string) (bool, string, string, string) {
 	a := strings.Split(paneString, " :: ")
 	isActive, err := strconv.Atoi(a[0])
-	handleExecError(err, "parsePaneString")
+	HandleExecError(err, "parsePaneString")
 	return isActive > 0, a[1], a[2], a[3]
 }
 
@@ -212,49 +222,49 @@ func getPanePreview(panePath string) string {
 }
 
 type Session struct {
-	name              string
-	creationDate      string
-	preview           string
-	id                int
-	activeWindowIndex int
-	numberOfWindows   int
-	isAttached        bool
-	isZoomed          bool
-	isExpanded        bool
-	windows           []Window
+	Name              string
+	CreationDate      string
+	Preview           string
+	Id                int
+	ActiveWindowIndex int
+	NumberOfWindows   int
+	IsAttached        bool
+	IsZoomed          bool
+	IsExpanded        bool
+	Windows           []Window
 }
 
 type Window struct {
-	name            string
-	index           string
-	activeDate      string
-	path            string
-	preview         string
-	session         string
-	isActive        bool
-	isExpanded      bool
-	activePaneIndex int
-	panes           []Pane
+	Name            string
+	Index           string
+	ActiveDate      string
+	Path            string
+	Preview         string
+	Session         string
+	IsActive        bool
+	IsExpanded      bool
+	ActivePaneIndex int
+	Panes           []Pane
 }
 
 type Pane struct {
-	name      string
-	path      string
-	index     string
-	command   string
-	directory string
-	session   string
-	isActive  bool
-	preview   string
+	Name      string
+	Path      string
+	Index     string
+	Command   string
+	Directory string
+	Session   string
+	IsActive  bool
+	Preview   string
 }
 
 type SessionData struct {
-	hasAttachedSession   bool
-	hasLivingSessions    bool
-	hasZoomedPane        bool
-	maxSessionNameLength int
-	attachedSession      string
-	sessions             []Session
+	HasAttachedSession   bool
+	HasLivingSessions    bool
+	HasZoomedPane        bool
+	MaxSessionNameLength int
+	AttachedSession      string
+	Sessions             []Session
 }
 
 type Tmux interface {
@@ -262,13 +272,13 @@ type Tmux interface {
 }
 
 func (s Session) kill() {
-	killTmuxSession(s.name)
+	KillTmuxSession(s.Name)
 }
 func (w Window) kill() {
-	killTmuxWindow(w.path)
+	KillTmuxWindow(w.Path)
 }
 func (p Pane) kill() {
-	killTmuxPane(p.path)
+	KillTmuxPane(p.Path)
 }
 
 func getMaxInt(x int, y int) int {
@@ -295,7 +305,7 @@ func getNameFromSessionString(sessionString string) string {
 	return strings.Split(sessionString, ":")[0]
 }
 
-func toCharStr(i int) string {
+func ToCharStr(i int) string {
 	return string('a' - 1 + i)
 }
 
@@ -307,14 +317,14 @@ func getWindowPanes(windowPath string, session string) ([]Pane, int) {
 	for ind, paneString := range tmuxPanes {
 		isActive, paneIndex, dir, command := parsePaneString(paneString)
 
-		pane := Pane{isActive: isActive, index: paneIndex, directory: dir, command: command}
-		pane.session = session
-		pane.name = paneIndex
-		pane.path = windowPath + "." + pane.name
-		pane.preview = getPanePreview(pane.path)
+		pane := Pane{IsActive: isActive, Index: paneIndex, Directory: dir, Command: command}
+		pane.Session = session
+		pane.Name = paneIndex
+		pane.Path = windowPath + "." + pane.Name
+		pane.Preview = getPanePreview(pane.Path)
 		sliceOfPanes[ind] = pane
 
-		if pane.isActive {
+		if pane.IsActive {
 			activeIndex = ind
 		}
 	}
@@ -331,14 +341,14 @@ func getSessionWindows(sessionName string) ([]Window, int) {
 	for ind, windowString := range tmuxWindows {
 		isActive, windowInd, name, _ := parseWindowString(windowString)
 
-		window := Window{isActive: isActive, name: name, index: windowInd}
-		window.session = sessionName
-		window.path = sessionName + ":" + window.index
-		window.panes, window.activePaneIndex = getWindowPanes(window.path, window.session)
-		window.preview = window.panes[window.activePaneIndex].preview
+		window := Window{IsActive: isActive, Name: name, Index: windowInd}
+		window.Session = sessionName
+		window.Path = sessionName + ":" + window.Index
+		window.Panes, window.ActivePaneIndex = getWindowPanes(window.Path, window.Session)
+		window.Preview = window.Panes[window.ActivePaneIndex].Preview
 		sliceOfWindows[ind] = window
 
-		if window.isActive {
+		if window.IsActive {
 			activeIndex = ind
 		}
 	}
@@ -350,7 +360,7 @@ func getNumberOfWindows(sessionString string) int {
 	match := re.FindString(sessionString)
 	i, err := strconv.Atoi(match)
 	if err != nil {
-		handleExecError(err, "getNumberOfWindows")
+		HandleExecError(err, "getNumberOfWindows")
 	}
 	return i
 }
@@ -360,34 +370,34 @@ func getNumberOfPanes(windowString string) int {
 	match := re.FindString(windowString)
 	i, err := strconv.Atoi(match)
 	if err != nil {
-		handleExecError(err, "getNumberOfPanes")
+		HandleExecError(err, "getNumberOfPanes")
 	}
 	return i
 }
 
-func getSessionData() SessionData {
+func GetSessionData() SessionData {
 	sessionNameLimiter := 100
-	sessionData := SessionData{hasAttachedSession: false, maxSessionNameLength: 0}
+	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0}
 	tmuxLsList := getTmuxSessionList()
 
 	sliceOfSessions := make([]Session, len(tmuxLsList))
 
 	for ind, sessionString := range tmuxLsList {
 		isAttached, name, _, isZoomed := parseSessionString(sessionString)
-		session := Session{isAttached: isAttached, name: name, id: ind, isZoomed: isZoomed}
+		session := Session{IsAttached: isAttached, Name: name, Id: ind, IsZoomed: isZoomed}
 		if isAttached {
-			sessionData.hasAttachedSession = true
-			sessionData.attachedSession = name
-			sessionData.hasZoomedPane = isZoomed
+			sessionData.HasAttachedSession = true
+			sessionData.AttachedSession = name
+			sessionData.HasZoomedPane = isZoomed
 		}
-		session.windows, session.activeWindowIndex = getSessionWindows(session.name)
-		session.preview = session.windows[session.activeWindowIndex].preview
+		session.Windows, session.ActiveWindowIndex = getSessionWindows(session.Name)
+		session.Preview = session.Windows[session.ActiveWindowIndex].Preview
 		sliceOfSessions[ind] = session
-		sessionData.maxSessionNameLength = getMaxInt(sessionData.maxSessionNameLength, len(session.name))
+		sessionData.MaxSessionNameLength = getMaxInt(sessionData.MaxSessionNameLength, len(session.Name))
 	}
 
-	sessionData.sessions = sliceOfSessions
-	sessionData.hasLivingSessions = len(sliceOfSessions) != 0 && sliceOfSessions[0].name != ""
-	sessionData.maxSessionNameLength = getMinInt(sessionNameLimiter, sessionData.maxSessionNameLength)
+	sessionData.Sessions = sliceOfSessions
+	sessionData.HasLivingSessions = len(sliceOfSessions) != 0 && sliceOfSessions[0].Name != ""
+	sessionData.MaxSessionNameLength = getMinInt(sessionNameLimiter, sessionData.MaxSessionNameLength)
 	return sessionData
 }
