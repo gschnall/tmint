@@ -28,7 +28,7 @@ func debugExecError(cmd *exec.Cmd) {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return
 	}
-	fmt.Println("Result: " + out.String())
+	// fmt.Println("Result: " + out.String())
 }
 func clear() {
 	cmd := exec.Command("clear")
@@ -36,12 +36,27 @@ func clear() {
 	HandleExecError(err, "clear")
 	fmt.Printf(string(stdout))
 }
-func getTmuxLs() string {
+func StartTmux() {
+	cmd := exec.Command("tmux")
+	// We need to connect tmux to our terminal
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	// -- Tmux isn't running -- 
+	HandleExecError(err, "startTmux")
+}
+func getTmuxLs() (string, bool) {
 	format := "#{session_attached} :: #{session_name} :: #{session_activity} :: #{window_zoomed_flag}"
 	cmd := exec.Command("tmux", "list-sessions", "-F", format)
 	stdout, err := cmd.Output()
-	HandleExecError(err, "getTmuxLs")
-	return string(stdout)
+	// -- Tmux isn't running -- 
+	if err != nil {
+		return "", false
+	}
+	// HandleExecError(err, "getTmuxLs")
+	return string(stdout), true
 }
 func getTmuxListWindows(sessionString string) string {
 	format := "#{window_active} :: #{window_index} :: #{window_name} :: #{window_activity}"
@@ -78,13 +93,13 @@ func AttachTmuxSession(sessionName string) {
 	err := cmd.Run()
 	HandleExecError(err, "AttachTmuxSession")
 }
-func RenameTmuxSession(sessionName string) {
-	cmd := exec.Command("tmux", "rename-session", "-t", sessionName)
+func RenameTmuxSession(sessionName string, newSessionName string) {
+	cmd := exec.Command("tmux", "rename-session", "-t", sessionName, newSessionName)
 	_, err := cmd.Output()
 	HandleExecError(err, "RenameTmuxSession")
 }
-func RenameTmuxWindow(windowPath string) {
-	cmd := exec.Command("tmux", "rename-window", "-t", windowPath)
+func RenameTmuxWindow(windowPath string, newWindowName string) {
+	cmd := exec.Command("tmux", "rename-window", "-t", windowPath, newWindowName)
 	_, err := cmd.Output()
 	HandleExecError(err, "RenameTmuxWindow")
 }
@@ -154,7 +169,10 @@ func CreateTmuxSession(name string, dir string, numberOfPanes int) {
 }
 
 func CreateTmuxWindow(name string, dir string, numberOfPanes int, targetSession string) {
-	cmd := exec.Command("tmux", "new-window", "-d", "-n", strings.TrimSpace(name), "-c", dir, "-t", targetSession)
+	// BUG - Creating tmux window within a target session with an int as name
+	// Need to target the next available int "name:nextAvailableInt" 4:1
+	// - tmux new-window -d -n "cool cat" -c ~/Documents -t 4:1
+	cmd := exec.Command("tmux", "new-window", "-d", "-n", strings.TrimSpace(name), "-c", dir, "-t", targetSession + ":")
 	// cmd.Stdin = os.Stdin
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
@@ -184,9 +202,12 @@ func tmuxSendKeys(panePath string, command string) {
 	HandleExecError(err, "tmuxSendKeys")
 }
 
-func getTmuxSessionList() []string {
-	tls := getTmuxLs()
-	return strings.Split(strings.TrimSpace(tls), "\n")
+func getTmuxSessionList() ([]string, bool) {
+	tls, tmuxIsRunning := getTmuxLs()
+	if tmuxIsRunning == false {
+		return make([]string, 0), false
+	}
+	return strings.Split(strings.TrimSpace(tls), "\n"), true
 }
 func getTmuxWindowList(sessionName string) []string {
 	wls := getTmuxListWindows(sessionName)
@@ -378,7 +399,11 @@ func getNumberOfPanes(windowString string) int {
 func GetSessionData() SessionData {
 	sessionNameLimiter := 100
 	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0}
-	tmuxLsList := getTmuxSessionList()
+	tmuxLsList, tmuxIsRunning := getTmuxSessionList()
+
+	if tmuxIsRunning == false {
+		return sessionData 
+	}
 
 	sliceOfSessions := make([]Session, len(tmuxLsList))
 
