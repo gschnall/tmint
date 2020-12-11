@@ -16,18 +16,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-// ----- Stuff to do -----
-
-// CHECK - Finish rename form
-// CHECK - Fix arrow keys/movement with breadth first search
-// CHECK - Perfect Replication of tmux tree movement
-// CHECK - Add regex for session and window names
-// CHECK - Fix bug when looking up directory with leading "/" char
-// CHECK - Add toggle expand all feature
-// CHECK - Feature - Display dropdown of sessions when creating new window
-
-// ----- ----------- -----
-
 // Views and their state variables
 var (
 	isUserPaneZoomed       = false
@@ -110,9 +98,6 @@ func handleChangePane(pane twiz.Pane, node *tview.TreeNode) {
 
 func expandAllChildNodes(node *tview.TreeNode) {
 	node.ExpandAll()
-	// node.Walk(func (node *tview.TreeNode, parent *tview.TreeNode) {
-	// 	node.Expand
-	// })
 }
 
 func expandNode(node *tview.TreeNode, moveNodes bool) {
@@ -126,7 +111,7 @@ func expandNode(node *tview.TreeNode, moveNodes bool) {
 }
 func collapseNode(node *tview.TreeNode, moveNodes bool) {
 	node.Collapse()
-	
+
 	if moveNodes {
 		sessionDisplay.SetCurrentNode(getPreviousNodeInTree(node))
 	}
@@ -182,14 +167,6 @@ func highlightNode(index int) {
 	node := sessionDisplay.GetRoot().GetChildren()[index]
 	sessionDisplay.SetCurrentNode(node)
 }
-
-//__________________________________________________________
-// | New Feature | Easy access of children with dot notation
-//----------------------------------------------------------
-// - input "." & int & if (children count > 9) display input and press ENTER
-// -- Result --
-// Select child (int - 1) from currently selected node
-//----------------------------------------------------------
 
 func highlightSessionNode(index int) {
 	if index > -1 && index < len(sessionData.Sessions) {
@@ -393,34 +370,28 @@ func runCallbacksForNode(node *tview.TreeNode, sfunc SessionFunc, wfunc WindowFu
 }
 
 func initSessionDisplay() {
-	// box := tview.NewBox().SetBorder(true)
-	// box.HasFocus(true)
-	// box.
 	root := tview.NewTreeNode("").
 		SetSelectable(false)
 	sessionDisplay.
 		SetRoot(root).
 		SetTopLevel(1)
 
-	// - BUG - Breaks right now - https://github.com/rivo/tview/issues/314
+	// - BUG - https://github.com/rivo/tview/issues/314
 	// SetBackgroundColor(tcell.ColorDefault)
-	// -> Can't hide modals and highlighted colors seem strange
+	// --> Can't hide modals and highlighted colors seem strange
 
 	for sInd, session := range sessionData.Sessions {
 		sNode := tview.NewTreeNode(getSessionDisplayName(session, false))
 		sNode.SetSelectable(true).SetExpanded(false)
-		// sNode.SetReference([]int{session.id})
 		sNode.SetReference(session)
 		for _, window := range session.Windows {
 			wNode := tview.NewTreeNode(getWindowDisplayName(window, false))
-			// wNode.SetReference([]int{session.id, wInd})
 			wNode.SetReference(window)
 			wNode.SetExpanded(false)
 			wNode.SetSelectable(true)
 			wNode.SetIndent(6)
 			for _, pane := range window.Panes {
 				pNode := tview.NewTreeNode(getPaneDisplayName(pane))
-				// pNode.SetReference([]int{session.id, wInd, pInd})
 				pNode.SetReference(pane)
 				pNode.SetIndent(3)
 				wNode.AddChild(pNode)
@@ -448,13 +419,6 @@ func initSessionDisplay() {
 	sessionDisplay.SetChangedFunc(func(node *tview.TreeNode) {
 		runCallbacksForNode(node, handleChangeSession, handleChangeWindow, handleChangePane)
 	})
-	// sessionDisplay.SetBackgroundColor(tcell.ColorDefault)
-
-	// Invoked on selected
-	// sessionDisplay.SetSelectedFunc(func(node *tview.TreeNode) {
-	// node.SetExpanded(!node.IsExpanded())
-	// node.SetColor(tcell.ColorRed)
-	// })
 }
 func refreshSessionDisplay() {
 	sessionData = twiz.GetSessionData()
@@ -474,7 +438,7 @@ func initHelpBoxDisplay() {
 	helpBoxDisplay.SetBorderColor(tcell.ColorGreen)
 	helpBoxDisplay.SetTitle("KEYS")
 	helpBoxDisplay.SetTitleAlign(tview.AlignLeft)
-	// Create full guide for users to view from app
+
 	helpTextList := [][]string{
 		{"", "arrow keys to navigate"},
 		{"", "or hjkl to navigate"},
@@ -696,37 +660,6 @@ func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
 	return nil
 }
 
-// func searchForTmuxNode(search string, path string) string {
-// 	if search == "" {
-// 		return ""
-// 	}
-
-// 	sNodes := sessionDisplay.GetRoot().GetChildren()
-// 	matchedPrefix := -1
-// 	matchedContain := -2
-
-// 	for i := len(sNodes) - 1; i >= 0; i-- {
-// 		sNode := sNodes[i]
-// 		// sNodeIDArr := sNode.GetReference().([]int)
-// 		session := sNode.GetReference().(twiz.Session)
-// 		// session := getSessionFromRef(sNodeIDArr)
-
-// 		matchStart, _ := regexp.MatchString("(?i)^"+search, session.Name)
-// 		matchContain := strings.Contains(session.Name, search)
-// 		if matchStart {
-// 			matchedPrefix = session.Id
-// 		} else if matchContain {
-// 			matchedContain = session.Id
-// 		}
-// 	}
-
-// 	if matchedPrefix != -1 {
-// 		return matchedPrefix
-// 	} else if matchedContain != -1 {
-// 		return matchedContain
-// 	}
-// }
-
 func initSearchBoxDisplay() {
 	searchBoxDisplay.
 		SetLabel("Search: ").
@@ -734,7 +667,6 @@ func initSearchBoxDisplay() {
 	searchBoxDisplay.SetBorder(true)
 	searchBoxDisplay.Box.SetBorderPadding(1, 1, 1, 1)
 	searchBoxDisplay.SetChangedFunc(func(text string) {
-		// sessionDisplay.GetRoot().CollapseAll()
 		searchedForNode := breadthFirstSearch(sessionDisplay.GetRoot(), text)
 		if searchedForNode != nil {
 			sessionDisplay.SetCurrentNode(searchedForNode)
@@ -1026,7 +958,7 @@ func initCreationForm(creation string) {
 			creationFormName = n
 		}).
 		AddFormItem(directoryInputField)
-		// -- Possibly a future addition --
+		// -- Possibly a future feature: let users select # of panes --
 		// AddDropDown("Panes", []string{"1", "2", "3", "4"}, 0, func(option string, ind int) {
 		// 	creationFormPaneCount = ind + 1
 		// }).
@@ -1055,28 +987,7 @@ func initConfirmModal() {
 				flexBoxWrapper.HidePage("confirmModal")
 			}
 		})
-
-	// --- Need to create custom modal to capture keypresses ---
-	// yButton := confirmModal.GetButton(0)
-	// nButton := confirmModal.GetButton(1)
-	// yButton.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey 
-	// 		killTmuxTarget(targetedNode, true)
-	// 	case 'n':
-	// 		flexBoxWrapper.HidePage("confirmModal")
-	// 	}
-
-	// 	return event
-	// })
-	// nButton.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-	// 	switch event.Rune() {
-	// 	case 'y':
-	// 		killTmuxTarget(targetedNode, true)
-	// 	case 'n':
-	// 		flexBoxWrapper.HidePage("confirmModal")
-	// 	}
-
-	// 	return event
-	// })
+	// --- Need to create custom modal to capture different keypresses
 }
 
 func initNoActiveSessionDisplay() {
@@ -1131,7 +1042,7 @@ func initNoActiveSessionInterface() {
 	initConfirmModal()
 	initNoActiveSessionDisplay()
 
-	// -------- Problaby don't need all of this ---------
+	// -------- This is problaby inactive code - look to delete ---------
 	flexBoxDisplay.
 		AddItem(helpBoxDisplay, 0, 0, false). // FOR HELP MENU
 		AddItem(mainFlexBoxView.SetDirection(tview.FlexRow).
@@ -1148,7 +1059,7 @@ func initNoActiveSessionInterface() {
 		AddPage("confirmModal", confirmModal, false, false)
 
 	flexBoxWrapper.SetBackgroundColor(tcell.ColorDefault)
-	// -------- ------------------------------- ---------
+	// -------- ------------------------------- -------------------------
 
 	if err := tviewApp.SetRoot(noActiveSessionDisplay, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
