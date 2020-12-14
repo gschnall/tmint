@@ -642,7 +642,6 @@ func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
 		if matchStart {
 			return nextUp
 		} else if strings.Contains(nodeName, search) {
-			toggleHelpBox()
 			matchContains = append(matchContains, nextUp)	
 		}
 
