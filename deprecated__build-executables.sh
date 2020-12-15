@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-
 # ----------------------
-# Use goreleases instead
+# Use release.sh instead
 # ----------------------
+# git tag -a v0.1.0 -m "Release info"
+# git push origin v0.1.0
+# goreleaser --rm-dist
 
 # To see all supported buids
 # > go tool dist list
