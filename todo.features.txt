@@ -1,0 +1,70 @@
+_____________________________________
+|                                   |
+| Improve node selection on refresh |
+|                                   |
+-------------------------------------
+[ ] Tmux Start Script
+optional shell script that will:
+- start tmint in a new window
+- cleanup window upon completion
+- attach all of this to a tmux keybinding
+tmint.tmux
+start_tmint.sh
+
+_____________________________________
+|                                   |
+| Improve node selection on refresh |
+|                                   |
+-------------------------------------
+[ ] Create session
+node representing created session should be selected
+
+[ ] Rename target 
+node representing renamed session or window should be selected
+
+[ ] Delete target
+select parent node of deleted target or, if none exists, previous/next sibling
+
+_____________________________________
+|                                   |
+| BUG - Inteface + and - on expand  |
+|                                   |
+-------------------------------------
+[ ] fix to re-prefeix node names on expand/collapse all 
+
+_____________________________________
+|                                   |
+| Feature to detach current session |
+|                                   |
+-------------------------------------
+[ ] Use "D" key char to detach and quit 
+
+_____________________________________
+|                                   |
+| Highling/Tag multiple nodes       |
+|                                   |
+-------------------------------------
+[ ] Use "t" key char to tag nodes 
+  [ ] kill all tagged nodes 
+  [ ] expand all tagged nodes 
+  [ ] search pane text of all tagged nodes 
+
+_____________________________________
+|                                   |
+| Feature to get pane scrollback    |
+|                                   |
+-------------------------------------
+[ ] User can view or save scrollback history for specific pane 
+they can modify the max # of lines of history they want
+[ ] User can search scrollback history for specific pane 
+[ ] User can search scrollback history for session, window, or pane 
+[ ] User can search scrollback history for all sessions
+
+_____________________________________
+|                                   |
+| Feature to get record pane        |
+|                                   |
+-------------------------------------
+[ ] User can start recording pane
+the recording will end once tmint is called again
+user will be able to select file to save recording to

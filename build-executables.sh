@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# ----------------------
-# Use release.sh instead
-# ----------------------
+# -------------------------
+# Use release.sh to release 
+# -------------------------
+# - it does stuff like this -
 # git tag -a v0.1.0 -m "Release info"
 # git push origin v0.1.0
 # goreleaser --rm-dist

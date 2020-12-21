@@ -10,7 +10,11 @@ import (
 	"strings"
 )
 
-// Command line funcs
+var (
+	tmintWindowName = "__| Tmint | a Tmux session manager |__"
+)
+
+// Command line Utils
 func HandleExecError(err error, f string) {
 	if err != nil {
 		fmt.Println("Exec Error: " + f)
@@ -242,6 +246,7 @@ func getPanePreview(panePath string) string {
 	return getTmuxCapturePane(panePath)
 }
 
+// Tmux Session Data 
 type Session struct {
 	Name              string
 	CreationDate      string
@@ -283,6 +288,7 @@ type SessionData struct {
 	HasAttachedSession   bool
 	HasLivingSessions    bool
 	HasZoomedPane        bool
+	TmintWindowIsActive  bool
 	MaxSessionNameLength int
 	AttachedSession      string
 	Sessions             []Session
@@ -316,16 +322,6 @@ func getMinInt(x int, y int) int {
 	return y
 }
 
-func sessionIsAttached(sessionString string) bool {
-	return strings.HasSuffix(sessionString, "] (attached)")
-}
-func nodeIsActive(nodeString string) bool {
-	return strings.HasSuffix(nodeString, " (active)")
-}
-func getNameFromSessionString(sessionString string) string {
-	return strings.Split(sessionString, ":")[0]
-}
-
 func ToCharStr(i int) string {
 	return string('a' - 1 + i)
 }
@@ -352,12 +348,13 @@ func getWindowPanes(windowPath string, session string) ([]Pane, int) {
 	return sliceOfPanes, activeIndex
 }
 
-func getSessionWindows(sessionName string) ([]Window, int) {
+func getSessionWindows(sessionName string) ([]Window, int, bool) {
 	tmuxWindows := getTmuxWindowList(sessionName)
 	// Get last active window time (DATE ONLY for now)
 	//time.Unix(1588109472, 0)
 	sliceOfWindows := make([]Window, len(tmuxWindows))
 	activeIndex := 0
+	tmuxWindowIsActive := false
 
 	for ind, windowString := range tmuxWindows {
 		isActive, windowInd, name, _ := parseWindowString(windowString)
@@ -372,8 +369,12 @@ func getSessionWindows(sessionName string) ([]Window, int) {
 		if window.IsActive {
 			activeIndex = ind
 		}
+
+		if name == tmintWindowName {
+			tmuxWindowIsActive = true	
+		}
 	}
-	return sliceOfWindows, activeIndex
+	return sliceOfWindows, activeIndex, tmuxWindowIsActive
 }
 
 func getNumberOfWindows(sessionString string) int {
@@ -415,7 +416,7 @@ func GetSessionData() SessionData {
 			sessionData.AttachedSession = name
 			sessionData.HasZoomedPane = isZoomed
 		}
-		session.Windows, session.ActiveWindowIndex = getSessionWindows(session.Name)
+		session.Windows, session.ActiveWindowIndex, sessionData.TmintWindowIsActive = getSessionWindows(session.Name)
 		session.Preview = session.Windows[session.ActiveWindowIndex].Preview
 		sliceOfSessions[ind] = session
 		sessionData.MaxSessionNameLength = getMaxInt(sessionData.MaxSessionNameLength, len(session.Name))
