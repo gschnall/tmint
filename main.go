@@ -6,7 +6,12 @@ import (
 	"github.com/urfave/cli"
 
 	tmint "github.com/gschnall/tmint/tmux_interface"
-	// twiz "github.com/gschnall/tmint/tmux_wizard"
+	twiz "github.com/gschnall/tmint/tmux_wizard"
+)
+
+var (
+	tmintSessionName = "|_ Tmint | a Tmux session manager _|"
+	currentSessionName = ":"
 )
 
 var app = cli.App{
@@ -24,14 +29,36 @@ func setupCliApp() {
 	app.Version = "1.0.0"
 	app.Flags = []cli.Flag{
 		&cli.BoolFlag{
-			Name:     "p",
-			Usage:    "Prevents tmint from zooming the current pane.",
+			Name:     "p", Usage:    "Prevents tmint from zooming the current pane.",
 			Required: false,
+		},
+		&cli.BoolFlag{
+			Name:     "t",
+			Usage:    "Used for tmux-keybindings",
+			Required: false,
+		},
+		&cli.StringFlag{
+			Name:     "s",
+			Value:		tmintSessionName, 
+			Usage:    "The name of the session created with -t flag.",
+			Required: false,
+			Destination: &tmintSessionName,
+		},
+		&cli.StringFlag{
+			Name:     "current-tmint-session",
+			Value:		currentSessionName, 
+			Usage:    "The name of the current session. Used for tmux keybindings workflow.",
+			Required: false,
+			Destination: &currentSessionName,
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
-		tmint.Start(c.Bool("p"))
+		if c.Bool("t") == true {
+			twiz.InitTmintForTmuxKeybindings(tmintSessionName)
+		} else {
+			tmint.Start(c.Bool("p"), currentSessionName, tmintSessionName)
+		}
 		return nil
 	}
 }

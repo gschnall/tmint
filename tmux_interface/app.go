@@ -10,7 +10,7 @@ import (
 // Views and their state variables
 var (
 	wasUserPaneZoomed       = false
-	sessionData            = twiz.GetSessionData()
+	sessionData            twiz.SessionData
 	tviewApp               = tview.NewApplication()
 	flexBoxDisplay         = tview.NewFlex()
 	flexBoxWrapper         = tview.NewPages()
@@ -62,7 +62,9 @@ func initInterface() {
 	}
 }
 
-func Start(doNotZoomPane bool) {
+func Start(doNotZoomPane bool, currentSession string, tmintSession string) {
+	sessionData = twiz.GetSessionData(currentSession, tmintSession)
+
 	if sessionData.HasLivingSessions == false {
 		initNoActiveSessionInterface()
 	} else {
@@ -76,6 +78,11 @@ func Start(doNotZoomPane bool) {
 		// Unzoom pane if it wasn't zoomed before
 		if wasUserPaneZoomed {
 		  twiz.TmuxToggleFullscreen()	
+		}
+		// Delete window for tmux-keybinding workflow
+		if currentSession != ":" {
+			twiz.SwitchToTmuxPath(currentSession)
+			twiz.KillTmuxSession(tmintSession)
 		}
 	}
 }

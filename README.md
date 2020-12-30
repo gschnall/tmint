@@ -4,27 +4,33 @@ Interface for managing Tmux sessions, windows, and panes.
 
 ## Status
 
-Working beta with more features being added.
+Work in progress with more features being added.
 
 ## Getting Started
 
 Download and unzip the file to the '/usr/bin' directory
 1. Download the zip file for your sysytem
 https://github.com/gschnall/tmint/releases
-for macOs use `tmint_0.1.0_Darwin_x86_64.tar.gz`
-3. `sudo tar -xf ~/Downloads/tmint_0.1.0_Darwin_x86_64.tar.gz -C /usr/bin`
+for macOs use `Darwin_x86_64.tar.gz`
+3. `sudo tar -xf ~/Downloads/${my-tmint-file}.tar.gz -C /usr/bin`
 3. the `tmint` command should now be available in your terminal
-4. once tmint has been started, use the `?` key to bring up the help menu 
+4. once tmint has been started, use the `?` key to bring up a help menu 
 
 ## Args
 `-p` prevents tmint from zooming the current pane (`tmint -p`)
 
 ## Example Keybindings
 
-### vim
-Within ~/.vmrc
+### Tmux
+Within `~/.tmux.conf`
+`bind-key C-t "run-shell 'go run tmint -t > /dev/null'"`
+Tmint can be launched in Tmux with `prefix + Ctrl-t` 
+- `Ctrl-b Ctrl-t` or, if you mapped the tmux prefix to `C-a`, `Ctrl-a Ctrl-t`  
+
+### Vim
+Within `~/.vmrc`
 `map <C-t> :!tmint<CR>`
-Tmint can now be launched in vim with Ctrl-t
+Tmint can be launched in vim with `Ctrl-t`
 
 ## Issues
 

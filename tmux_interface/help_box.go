@@ -51,7 +51,7 @@ func toggleHelpBox() {
 		width = 1
 	}
 	helpBoxDisplayWidth = width
-	flexBoxDisplay.ResizeItem(helpBoxDisplay, 0, width)
+	flexBoxDisplay.ResizeItem(helpBoxDisplay, width*27, width)
 }
 
 // - Only used for debugging

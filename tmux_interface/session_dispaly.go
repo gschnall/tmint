@@ -25,7 +25,7 @@ func initSessionDisplay() {
 	sessionDisplay.
 		SetRoot(root).
 		SetTopLevel(1)
-
+	
 	// BUG - https://github.com/rivo/tview/issues/314
 	// SetBackgroundColor(tcell.ColorDefault)
 	// --> Can't hide modals and highlighted colors seem strange
@@ -92,11 +92,11 @@ func runCallbacksForNode(node *tview.TreeNode, sfunc SessionFunc, wfunc WindowFu
 }
 
 func refreshSessionDisplay() {
-	sessionData = twiz.GetSessionData()
+	sessionData = twiz.GetSessionData(sessionData.AttachedSession, sessionData.TmintSession)
 	initSessionDisplay()
 }
 
-// To Do: Rework thsese into case statements
+// To Do: Deprecated - rework thsese into case statements
 func toggleSessionName(session twiz.Session, node *tview.TreeNode) {
 	node.SetText(getSessionDisplayName(session, node.IsExpanded()))
 }
@@ -198,7 +198,7 @@ func switchTmuxToCurrentNode() {
 	}
 }
 
-// To Do: Rework thsese into case statements
+// To Do: Deprecated - rework thsese into case statements
 func handleKillSession(session twiz.Session, node *tview.TreeNode) {
 	twiz.KillTmuxSession(session.Name)
 }

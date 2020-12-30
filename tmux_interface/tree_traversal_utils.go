@@ -31,6 +31,9 @@ func getPreviousNodeInTree(node *tview.TreeNode) *tview.TreeNode {
 
 			if tmuxType == "window" && index > 0 {
 				previousSib := getPreviousSibling(node)				
+				if !previousSib.IsExpanded() {
+					return previousSib
+				}
 				previousSibChildren := previousSib.GetChildren()
 				return previousSibChildren[len(previousSibChildren)-1]
 			}
