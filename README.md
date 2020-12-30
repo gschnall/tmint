@@ -4,31 +4,33 @@ Interface for managing Tmux sessions, windows, and panes.
 
 ## Status
 
-Working beta with more features being added.
+Work in progress with more features being added.
 
 ## Getting Started
 
-1. Download and unzip the release for your system
+Download and unzip the file to the '/usr/bin' directory
+1. Download the zip file for your sysytem
 https://github.com/gschnall/tmint/releases
-for macOs use `tmint_0.1.0_Darwin_x86_64.tar.gz`
-2. save the executable somewhere like `~/.tmux/tmint`
-3. run it `~/path-to-my-executable/tmint`
-4. use the `?` key to bring up the help menu
+for macOs use `Darwin_x86_64.tar.gz`
+3. `sudo tar -xf ~/Downloads/${my-tmint-file}.tar.gz -C /usr/bin`
+3. the `tmint` command should now be available in your terminal
+4. once tmint has been started, use the `?` key to bring up a help menu 
 
-## Keybindings
+## Args
+`-p` prevents tmint from zooming the current pane (`tmint -p`)
 
-### bashrc or zshrc alias
-`alias tmint=~/path-to-my-executable/tmint`
-example:
-`alias tmint=~/.tmux/tmint`
+## Example Keybindings
 
-### vim keybinding
-Within ~/.vmrc
-`map <C-t> :!~/.tmux/tmint<CR>`
-Tmint can now be launched in vim with Ctrl-t
+### Tmux
+Within `~/.tmux.conf`
+`bind-key C-t "run-shell 'go run tmint -t > /dev/null'"`
+Tmint can be launched in Tmux with `prefix + Ctrl-t` 
+- `Ctrl-b Ctrl-t` or, if you mapped the tmux prefix to `C-a`, `Ctrl-a Ctrl-t`  
 
-### tmux keybinding
-Work in progress.
+### Vim
+Within `~/.vmrc`
+`map <C-t> :!tmint<CR>`
+Tmint can be launched in vim with `Ctrl-t`
 
 ## Issues
 
@@ -36,7 +38,7 @@ Find a bug or want a new feature? Feel free to create an issue
 
 ## Contributions
 
-Create a new branch and submit a Pull request with screenshots and text describing changes.
+Create a new branch and submit a Pull request with screenshots and a description of changes.
 
 ## Licensing
 MIT - see LICENSE

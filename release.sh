@@ -19,10 +19,29 @@ elif [[ -z "$message" ]]; then
   exit 1
 fi
 
-echo "version: $version"
-echo "message: $message"
+function check_for_git_changes {
+  if [[ $(git diff --stat) != '' ]]; then
+    echo 'There are uncommitted changes in your git directory'
+    echo "-You'll need to commit, or remove, them before goreleaser will work."
+    exit 1
+  fi
+
+  local untracked_files=$(git status --porcelain 2>/dev/null| grep "^??" | wc -l)
+  if [[ $untracked_files > 0 ]]; then
+    echo "You have untracked_files in the repo."
+    echo "-You'll need to commit, or remove, them before goreleaser will work."
+    exit 1
+  fi
+}
 
 function main {
+  check_for_git_changes
+
+  echo " Release"
+  echo "---------"
+  echo "version: $version"
+  echo "message: $message"
+
   git tag -a "$version" -m "$message"&&git push origin "$version"&&goreleaser --rm-dist
 
   echo "____________________"
@@ -34,4 +53,3 @@ function main {
   echo "-------------------"
 }
 main
-
