@@ -71,9 +71,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
 	}
-
-	// On data refresh this will always be true - have to avoid setting it again
-	// if !isUserPaneZoomed {
-	// 	twiz.TmuxToggleFullscreen()
-	// }
 }
