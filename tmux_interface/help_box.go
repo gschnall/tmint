@@ -21,15 +21,17 @@ func initHelpBoxDisplay() {
 		{"", "arrow keys to navigate"},
 		{"", "or hjkl to navigate"},
 		{"", ""},
+		{"", "ENTER to attach target"},
+		{"", ""},
 		{"/", "search | Ctrl-s"},
 		{"s", "create session"},
 		{"w", "create window"},
 		{"x", "delete target"},
 		{"r", "rename target"},
 		{"e", "toggle expand"},
+		{"+", "expand all"},
+		{"-", "collapse all"},
 		{"?", "toggle help"},
-		{"+", "toggle expand all"},
-		{"-", "toggle collapse all"},
 	}
 
 	for ind, rowList := range helpTextList {

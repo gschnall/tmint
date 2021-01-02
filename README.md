@@ -1,6 +1,6 @@
 # T mint
 Interface for managing Tmux sessions, windows, and panes.
-- created with [tview](https://github.com/rivo/tview) > https://github.com/rivo/tview
+- created with [tview](https://github.com/rivo/tview) | https://github.com/rivo/tview
  
 ![tmint screenshot](./readme_screenshots/tmint_1.png?raw=true "T mint")
 
@@ -12,15 +12,17 @@ Work in progress with more features being added.
 
 Download and unzip the file to your '/usr/bin' directory
 1. Download the zip file for your sysytem
-https://github.com/gschnall/tmint/releases
+https://github.com/gschnall/tmint/releases  
 for macOs use `Darwin_x86_64.tar.gz`
 3. `sudo tar -xf ~/Downloads/${my-tmint-file}.tar.gz -C /usr/bin`
 3. the `tmint` command should now be available in your terminal
 4. once tmint has been started, use the `?` key to bring up a help menu 
 
 ## Args
-`-p` prevents tmint from zooming the current pane (`tmint -p`)
+`-p` prevents tmint from zooming the current pane (`tmint -p`)  
+- only used when a tmux session is attached
 `-t` activates a workflow for tmux keybindings. See Example Keybindings.
+- If used while a session is detached, it will auto attach the session.
 
 ## Example Keybindings
 

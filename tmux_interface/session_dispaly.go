@@ -173,28 +173,26 @@ func formatSessionId(id int) string {
 	return ""
 }
 
-func switchTmuxToCurrentNode() {
-	tviewApp.Stop()
+func switchTmuxToCurrentNode(node *tview.TreeNode) {
+	tmux := node.GetReference()
+	pathName := "" 
+	switch tmux.(type) {
+	case twiz.Session:
+		pathName = tmux.(twiz.Session).Name
+	case twiz.Window:
+		pathName = tmux.(twiz.Window).Path
+	case twiz.Pane:
+		pathName = tmux.(twiz.Pane).Path
+	}
 
-	tmux := sessionDisplay.GetCurrentNode().GetReference()
 	if sessionData.HasAttachedSession {
-		switch tmux.(type) {
-		case twiz.Session:
-			twiz.SwitchToTmuxPath(tmux.(twiz.Session).Name)
-		case twiz.Window:
-			twiz.SwitchToTmuxPath(tmux.(twiz.Window).Path)
-		case twiz.Pane:
-			twiz.SwitchToTmuxPath(tmux.(twiz.Pane).Path)
-		}
+		// for tmux -t keybinding workflow
+		sessionData.AttachedSession = pathName 
+		tviewApp.Stop()
+		twiz.SwitchToTmuxPath(pathName)
 	} else {
-		switch tmux.(type) {
-		case twiz.Session:
-			twiz.AttachTmuxSession(tmux.(twiz.Session).Name)
-		case twiz.Window:
-			twiz.AttachTmuxSession(tmux.(twiz.Window).Session)
-		case twiz.Pane:
-			twiz.AttachTmuxSession(tmux.(twiz.Pane).Session)
-		}
+		tviewApp.Stop()
+		twiz.AttachTmuxSession(pathName)
 	}
 }
 
@@ -266,6 +264,10 @@ func detachSession(node *tview.TreeNode) {
 // |             |
 // ---------------
 func initSessionDisplayKeys() {
+	sessionDisplay.SetSelectedFunc(func(node *tview.TreeNode) {
+		switchTmuxToCurrentNode(node)
+	})
+
 	sessionDisplay.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyRight:
@@ -274,8 +276,6 @@ func initSessionDisplayKeys() {
 			collapseNode(sessionDisplay.GetCurrentNode(), false)
 		case tcell.KeyCtrlS:
 			toggleSearchBox()
-		case tcell.KeyEnter:
-			switchTmuxToCurrentNode()
 		}
 
 		switch event.Rune() {

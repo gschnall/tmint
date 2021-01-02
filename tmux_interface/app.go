@@ -79,9 +79,9 @@ func Start(doNotZoomPane bool, currentSession string, tmintSession string) {
 		if wasUserPaneZoomed {
 		  twiz.TmuxToggleFullscreen()	
 		}
-		// Delete window for tmux-keybinding workflow
+		// Delete session for tmux-keybinding workflow
 		if currentSession != ":" {
-			twiz.SwitchToTmuxPath(currentSession)
+			twiz.SwitchToTmuxPath(sessionData.AttachedSession)
 			twiz.KillTmuxSession(tmintSession)
 		}
 	}
