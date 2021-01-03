@@ -20,9 +20,9 @@ for macOs use `Darwin_x86_64.tar.gz`
 
 ## Args
 `-p` prevents tmint from zooming the current pane (`tmint -p`)  
-- only used when a tmux session is attached
-`-t` activates a workflow for tmux keybindings. See Example Keybindings.
-- If used while a session is detached, it will auto attach the session.
+- only works while a tmux session is attached  
+`-t` activates a workflow for tmux keybindings. See Example Keybindings.  
+- only works while a tmux session is attached
 
 ## Example Keybindings
 
