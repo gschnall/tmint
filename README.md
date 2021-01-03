@@ -2,7 +2,7 @@
 Interface for managing Tmux sessions, windows, and panes.
 - created with [tview](https://github.com/rivo/tview) | https://github.com/rivo/tview
  
-![tmint screenshot](./readme_screenshots/tmint_1.png?raw=true "T mint")
+![tmint screenshot](./readme_screenshots/tmint_2.png?raw=true "T mint")
 
 ## Status
 
@@ -19,10 +19,9 @@ for macOs use `Darwin_x86_64.tar.gz`
 4. once tmint has been started, use the `?` key to bring up a help menu 
 
 ## Args
-`-p` prevents tmint from zooming the current pane (`tmint -p`)  
-- only works while a tmux session is attached  
+`-p` prevents tmint from zooming the current pane (`tmint -p`)    
 `-t` activates a workflow for tmux keybindings. See Example Keybindings.  
-- only works while a tmux session is attached
+- these args only work while a tmux session is attached
 
 ## Example Keybindings
 
