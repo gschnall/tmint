@@ -127,6 +127,11 @@ func KillTmuxSession(sessionName string) {
 	HandleExecError(err, "KillTmuxSession")
 }
 
+func TryToKillTmuxSession(sessionName string) {
+	cmd := exec.Command("tmux", "kill-session", "-t", sessionName)
+	cmd.Output()
+}
+
 func KillTmuxWindow(windowPath string) {
 	cmd := exec.Command("tmux", "kill-window", "-t", windowPath)
 	_, err := cmd.Output()
