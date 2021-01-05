@@ -6,16 +6,16 @@ Interface for managing Tmux sessions, windows, and panes.
 
 ## Status
 
-Work in progress with more features being added.
+Not yet stable. Work in progress with more features being added.
 
 ## Getting Started
 
-Download and unzip the file to your '/usr/bin' directory
+Place the executable in your `/usr/local/bin` directory
 1. Download the zip file for your sysytem
 https://github.com/gschnall/tmint/releases  
 for macOs use `Darwin_x86_64.tar.gz`
-3. `sudo tar -xf ~/Downloads/${my-tmint-file}.tar.gz -C /usr/bin`
-3. the `tmint` command should now be available in your terminal
+2. Unzip the contents
+3. move the `tmint` executable to your `/usr/local/bin` directory 
 4. once tmint has been started, use the `?` key to bring up a help menu 
 
 ## Args
