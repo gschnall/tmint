@@ -2,7 +2,6 @@ package tmux_interface
 
 import (
 	"strconv"
-	"time"
 
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -92,7 +91,11 @@ func runCallbacksForNode(node *tview.TreeNode, sfunc SessionFunc, wfunc WindowFu
 }
 
 func refreshSessionDisplay() {
-	sessionData = twiz.GetSessionData(sessionData.AttachedSession, sessionData.TmintSession)
+	result := make(chan twiz.SessionData, 1)
+	go twiz.GetSessionData(sessionData.AttachedSession, sessionData.TmintSession, result)
+	dataResult := <- result
+	sessionData = dataResult 
+	close(result)
 	initSessionDisplay()
 }
 
@@ -218,7 +221,6 @@ func confirmKillPane(pane twiz.Pane, node *tview.TreeNode) {
 func killTmuxTarget(node *tview.TreeNode, killTarget bool) {
 	if killTarget {
 		runCallbacksForNode(node, handleKillSession, handleKillWindow, handleKillPane)
-		time.Sleep(10 * time.Millisecond)
 		refreshSessionDisplay()
 		flexBoxWrapper.HidePage("confirmModal")
 	} else {
@@ -252,7 +254,6 @@ func detachSession(node *tview.TreeNode) {
 	case twiz.Session:
 		if tmux.(twiz.Session).IsAttached {
 			tviewApp.Stop()
-			time.Sleep(10 * time.Millisecond)
 			twiz.DetachTmuxSession(tmux.(twiz.Session).Name)
 		}
 	}

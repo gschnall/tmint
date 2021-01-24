@@ -54,11 +54,13 @@ func getLastVisibleChildNodeInSession(node *tview.TreeNode) *tview.TreeNode {
 	windowChildren := lastWindow.GetChildren()
 	lastPane := windowChildren[len(windowChildren)-1]
 
-	if lastWindow.IsExpanded() {
+	if !node.IsExpanded() {
+		return node
+	} else if lastWindow.IsExpanded() {
 		return lastPane
 	} else if node.IsExpanded() {
 		return lastWindow
-	} 
+	}
 	return node 
 }
 
