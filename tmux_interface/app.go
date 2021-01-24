@@ -63,7 +63,11 @@ func initInterface() {
 }
 
 func Start(doNotZoomPane bool, currentSession string, tmintSession string) {
-	sessionData = twiz.GetSessionData(currentSession, tmintSession)
+	result := make(chan twiz.SessionData, 1)
+	go twiz.GetSessionData(currentSession, tmintSession, result)
+	dataResult := <- result
+	sessionData = dataResult
+	close(result)
 
 	if sessionData.HasLivingSessions == false {
 		initNoActiveSessionInterface()

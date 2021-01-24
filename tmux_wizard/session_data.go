@@ -138,13 +138,14 @@ func getNumberOfPanes(windowString string) int {
 	return i
 }
 
-func GetSessionData(currentSession string, tmintSession string) SessionData {
+func GetSessionData(currentSession string, tmintSession string, result chan SessionData) {
 	sessionNameLimiter := 100
 	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0, TmintSession: tmintSession}
 	tmuxLsList, tmuxIsRunning := getTmuxSessionList()
 
 	if tmuxIsRunning == false {
-		return sessionData
+		result <- sessionData
+		return
 	}
 
 	if currentSession != ":" {
@@ -171,5 +172,7 @@ func GetSessionData(currentSession string, tmintSession string) SessionData {
 	sessionData.Sessions = sliceOfSessions
 	sessionData.HasLivingSessions = len(sliceOfSessions) != 0 && sliceOfSessions[0].Name != ""
 	sessionData.MaxSessionNameLength = getMinInt(sessionNameLimiter, sessionData.MaxSessionNameLength)
-	return sessionData
+
+	result <- sessionData
+	return
 }
