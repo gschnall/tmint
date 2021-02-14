@@ -1,4 +1,4 @@
-package tmux_wizard 
+package tmux_wizard
 
 import (
 	"regexp"
@@ -46,6 +46,7 @@ type SessionData struct {
 	HasAttachedSession   bool
 	HasLivingSessions    bool
 	HasZoomedPane        bool
+	IsUsingKeybindings   bool
 	MaxSessionNameLength int
 	AttachedSession      string
 	TmintSession         string
@@ -138,9 +139,9 @@ func getNumberOfPanes(windowString string) int {
 	return i
 }
 
-func GetSessionData(currentSession string, tmintSession string, result chan SessionData) {
+func GetSessionData(currentSession string, tmintSession string, runFromKeybindings bool, result chan SessionData) {
 	sessionNameLimiter := 100
-	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0, TmintSession: tmintSession}
+	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0, TmintSession: tmintSession, IsUsingKeybindings: runFromKeybindings}
 	tmuxLsList, tmuxIsRunning := getTmuxSessionList()
 
 	if tmuxIsRunning == false {
@@ -148,7 +149,7 @@ func GetSessionData(currentSession string, tmintSession string, result chan Sess
 		return
 	}
 
-	if currentSession != ":" {
+	if currentSession != ":" && runFromKeybindings {
 		tmuxLsList = tmuxLsList[:len(tmuxLsList)-1]
 	}
 	sliceOfSessions := make([]Session, len(tmuxLsList))
@@ -156,7 +157,7 @@ func GetSessionData(currentSession string, tmintSession string, result chan Sess
 	for ind, sessionString := range tmuxLsList {
 		isAttached, name, _, isZoomed := parseSessionString(sessionString)
 		session := Session{IsAttached: isAttached, Name: name, Id: ind, IsZoomed: isZoomed}
-		if isAttached || currentSession == name  {
+		if isAttached || currentSession == name {
 			sessionData.HasZoomedPane = isZoomed
 			sessionData.AttachedSession = name
 			sessionData.HasAttachedSession = true
