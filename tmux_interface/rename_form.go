@@ -10,7 +10,7 @@ import (
 
 var (
 	renameForm     = tview.NewForm()
-	renameFormName = "" 
+	renameFormName = ""
 )
 
 func initRenameForm() {
@@ -27,7 +27,7 @@ func initRenameForm() {
 		return
 	}
 
-	renameSession := func () {
+	renameSession := func() {
 		if renameFormName != "" {
 			twiz.RenameTmuxSession(tmux.(twiz.Session).Name, renameFormName)
 		}
@@ -35,7 +35,7 @@ func initRenameForm() {
 		time.Sleep(200 * time.Millisecond)
 		refreshSessionDisplay()
 	}
-	renameWindow := func () {
+	renameWindow := func() {
 		if renameFormName != "" {
 			twiz.RenameTmuxWindow(tmux.(twiz.Window).Path, renameFormName)
 		}
@@ -46,15 +46,15 @@ func initRenameForm() {
 
 	renameForm.SetTitle("Rename " + targetType + " " + targetName)
 	renameForm.AddInputField("Name", targetName, 20, tmuxNameIsValid, func(n string) {
-			renameFormName = n
-		})
+		renameFormName = n
+	})
 
-		if targetType == "window" {
-			renameForm.AddButton("Save", renameWindow)
-		} else {
-			renameForm.AddButton("Save", renameSession)
-		} 
-		renameForm.AddButton("Cancel", endRenameForm)
+	if targetType == "window" {
+		renameForm.AddButton("Save", renameWindow)
+	} else {
+		renameForm.AddButton("Save", renameSession)
+	}
+	renameForm.AddButton("Cancel", endRenameForm)
 
 	renameForm.SetBorder(true).SetTitle(fmt.Sprintf(" Rename %s | ESC to cancel | Ctrl-u to clear input ", targetType)).SetTitleAlign(tview.AlignLeft)
 

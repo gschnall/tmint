@@ -9,17 +9,17 @@ import (
 
 // Views and their state variables
 var (
-	wasUserPaneZoomed       = false
-	sessionData            twiz.SessionData
-	tviewApp               = tview.NewApplication()
-	flexBoxDisplay         = tview.NewFlex()
-	flexBoxWrapper         = tview.NewPages()
-	mainFlexBoxView        = tview.NewFlex()
+	wasUserPaneZoomed = false
+	sessionData       twiz.SessionData
+	tviewApp          = tview.NewApplication()
+	flexBoxDisplay    = tview.NewFlex()
+	flexBoxWrapper    = tview.NewPages()
+	mainFlexBoxView   = tview.NewFlex()
 )
 
 func initNoActiveSessionInterface() {
-  // Test Feature
-  // - Allow users to create new session
+	// Test Feature
+	// - Allow users to create new session
 	initNoActiveSessionDisplay()
 	initDirectoryInputField()
 	initConfirmModal()
@@ -62,10 +62,10 @@ func initInterface() {
 	}
 }
 
-func Start(doNotZoomPane bool, currentSession string, tmintSession string) {
+func Start(doNotZoomPane bool, currentSession string, tmintSession string, runFromKeybindings bool) {
 	result := make(chan twiz.SessionData, 1)
-	go twiz.GetSessionData(currentSession, tmintSession, result)
-	dataResult := <- result
+	go twiz.GetSessionData(currentSession, tmintSession, runFromKeybindings, result)
+	dataResult := <-result
 	sessionData = dataResult
 	close(result)
 
@@ -81,7 +81,7 @@ func Start(doNotZoomPane bool, currentSession string, tmintSession string) {
 		initInterface()
 		// Unzoom pane if it wasn't zoomed before
 		if wasUserPaneZoomed {
-		  twiz.TmuxToggleFullscreen()	
+			twiz.TmuxToggleFullscreen()
 		}
 		// Delete session for tmux-keybinding workflow
 		if currentSession != ":" {

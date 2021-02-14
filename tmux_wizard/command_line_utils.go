@@ -1,4 +1,4 @@
-package tmux_wizard 
+package tmux_wizard
 
 import (
 	"bytes"
@@ -46,7 +46,7 @@ func StartTmux() {
 	cmd.Stderr = os.Stderr
 
 	err := cmd.Run()
-	// -- Tmux isn't running -- 
+	// -- Tmux isn't running --
 	HandleExecError(err, "startTmux")
 }
 
@@ -54,7 +54,7 @@ func getTmuxLs() (string, bool) {
 	format := "#{session_attached} :: #{session_name} :: #{session_activity} :: #{window_zoomed_flag}"
 	cmd := exec.Command("tmux", "list-sessions", "-F", format)
 	stdout, err := cmd.Output()
-	// -- Tmux isn't running -- 
+	// -- Tmux isn't running --
 	if err != nil {
 		return "", false
 	}
@@ -123,7 +123,9 @@ func RenameTmuxWindow(windowPath string, newWindowName string) {
 
 func KillTmuxSession(sessionName string) {
 	cmd := exec.Command("tmux", "kill-session", "-t", sessionName)
-	_, err := cmd.Output()
+	err := cmd.Start()
+	HandleExecError(err, "KillTmuxSession")
+	err = cmd.Wait()
 	HandleExecError(err, "KillTmuxSession")
 }
 
@@ -140,7 +142,9 @@ func KillTmuxWindow(windowPath string) {
 
 func KillTmuxPane(panePath string) {
 	cmd := exec.Command("tmux", "kill-pane", "-t", panePath)
-	_, err := cmd.Output()
+	err := cmd.Start()
+	HandleExecError(err, "KillTmuxPane")
+	err = cmd.Wait()
 	HandleExecError(err, "KillTmuxPane")
 }
 
@@ -164,7 +168,9 @@ func tmuxSplitPaneH(panePath string) {
 
 func CreateTmuxSession(name string, dir string, numberOfPanes int) {
 	cmd := exec.Command("tmux", "new", "-d", "-s", strings.TrimSpace(name), "-c", dir)
-	_, err := cmd.Output()
+	err := cmd.Start()
+	HandleExecError(err, "CreateTmuxSession")
+	err = cmd.Wait()
 	HandleExecError(err, "CreateTmuxSession")
 	if numberOfPanes == 2 {
 		tmuxSplitPaneV(name + ":0")
@@ -182,7 +188,7 @@ func CreateTmuxWindow(name string, dir string, numberOfPanes int, targetSession 
 	// BUG - Creating tmux window within a target session with an int as name
 	// Need to target the next available int "name:nextAvailableInt" 4:1
 	// - tmux new-window -d -n "cool cat" -c ~/Documents -t 4:1
-	cmd := exec.Command("tmux", "new-window", "-d", "-n", strings.TrimSpace(name), "-c", dir, "-t", targetSession + ":")
+	cmd := exec.Command("tmux", "new-window", "-d", "-n", strings.TrimSpace(name), "-c", dir, "-t", targetSession+":")
 	_, err := cmd.Output()
 	HandleExecError(err, "CreateTmuxWindow")
 	if numberOfPanes == 2 {

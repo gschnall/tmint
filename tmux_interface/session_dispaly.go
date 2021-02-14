@@ -24,7 +24,6 @@ func initSessionDisplay() {
 	sessionDisplay.
 		SetRoot(root).
 		SetTopLevel(1)
-	
 	// BUG - https://github.com/rivo/tview/issues/314
 	// SetBackgroundColor(tcell.ColorDefault)
 	// --> Can't hide modals and highlighted colors seem strange
@@ -78,6 +77,7 @@ func initSessionDisplay() {
 type SessionFunc func(twiz.Session, *tview.TreeNode)
 type WindowFunc func(twiz.Window, *tview.TreeNode)
 type PaneFunc func(twiz.Pane, *tview.TreeNode)
+
 func runCallbacksForNode(node *tview.TreeNode, sfunc SessionFunc, wfunc WindowFunc, pfunc PaneFunc) {
 	tmux := node.GetReference()
 	switch tmux.(type) {
@@ -92,9 +92,9 @@ func runCallbacksForNode(node *tview.TreeNode, sfunc SessionFunc, wfunc WindowFu
 
 func refreshSessionDisplay() {
 	result := make(chan twiz.SessionData, 1)
-	go twiz.GetSessionData(sessionData.AttachedSession, sessionData.TmintSession, result)
-	dataResult := <- result
-	sessionData = dataResult 
+	go twiz.GetSessionData(sessionData.AttachedSession, sessionData.TmintSession, sessionData.IsUsingKeybindings, result)
+	dataResult := <-result
+	sessionData = dataResult
 	close(result)
 	initSessionDisplay()
 }
@@ -178,7 +178,7 @@ func formatSessionId(id int) string {
 
 func switchTmuxToCurrentNode(node *tview.TreeNode) {
 	tmux := node.GetReference()
-	pathName := "" 
+	pathName := ""
 	switch tmux.(type) {
 	case twiz.Session:
 		pathName = tmux.(twiz.Session).Name
@@ -190,7 +190,7 @@ func switchTmuxToCurrentNode(node *tview.TreeNode) {
 
 	if sessionData.HasAttachedSession {
 		// for tmux -t keybinding workflow
-		sessionData.AttachedSession = pathName 
+		sessionData.AttachedSession = pathName
 		tviewApp.Stop()
 		twiz.SwitchToTmuxPath(pathName)
 	} else {
