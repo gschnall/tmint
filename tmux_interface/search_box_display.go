@@ -1,8 +1,8 @@
 package tmux_interface
 
 import (
-	"strings"
 	"regexp"
+	"strings"
 
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -20,7 +20,6 @@ func initSearchBoxDisplay() {
 		SetLabel("Search: ").
 		SetFieldWidth(32)
 	searchBoxDisplay.SetBorder(true)
-	searchBoxDisplay.Box.SetBorderPadding(1, 1, 1, 1)
 	searchBoxDisplay.SetChangedFunc(func(text string) {
 		searchedForNode := breadthFirstSearch(sessionDisplay.GetRoot(), text)
 		if searchedForNode != nil {
@@ -52,7 +51,7 @@ func toggleSearchBox() {
 
 func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
 	if search == "" {
-		return sessionDisplay.GetCurrentNode() 
+		return sessionDisplay.GetCurrentNode()
 	}
 	search = strings.ToLower(search)
 
@@ -82,7 +81,7 @@ func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
 		if matchStart {
 			return nextUp
 		} else if strings.Contains(nodeName, search) {
-			matchContains = append(matchContains, nextUp)	
+			matchContains = append(matchContains, nextUp)
 		}
 
 		nextUpChildren := nextUp.GetChildren()

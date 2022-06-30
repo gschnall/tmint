@@ -33,14 +33,18 @@ func initInterface() {
 	initSessionDisplay()
 	initPreviewDisplay()
 	initHelpBoxDisplay()
+	initCheatSheetDisplay()
 	initSearchBoxDisplay()
 	initDirectoryInputField()
 	initConfirmModal()
+	initLoadingModal()
+	initScrollbackHistoryForm()
 
 	flexBoxDisplay.
 		AddItem(helpBoxDisplay, 0, 0, false). // FOR HELP MENU
 		AddItem(mainFlexBoxView.SetDirection(tview.FlexRow).
-			AddItem(confirmModal, 0, 0, false).
+			// AddItem(confirmModal, 0, 0, false).
+			// AddItemgloadingModal, 0, 0, false).
 			AddItem(sessionDisplay, 0, 6, true).
 			AddItem(searchBoxDisplay, 0, 0, false).
 			AddItem(previewDisplay, 0, 3, false), 0, 5, true)
@@ -53,11 +57,20 @@ func initInterface() {
 
 	flexBoxWrapper.
 		AddPage("flexBoxDisplay", flexBoxDisplay, true, true).
-		AddPage("confirmModal", confirmModal, false, false)
+		AddPage("confirmModal", confirmModal, false, false).
+		AddPage("loadingModal", loadingModal, false, false)
 
 	flexBoxWrapper.SetBackgroundColor(tcell.ColorDefault)
 
 	if err := tviewApp.SetRoot(flexBoxWrapper, true).EnableMouse(true).Run(); err != nil {
+		panic(err)
+	}
+}
+
+func StartResizeInterface() {
+	initResizeDisplay()
+
+	if err := tviewApp.SetRoot(resizeDisplay, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 }

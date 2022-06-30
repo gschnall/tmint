@@ -9,6 +9,8 @@ type Session struct {
 	Name              string
 	CreationDate      string
 	Preview           string
+	PanePath          string
+	ActiveWindowName  string
 	Id                int
 	ActiveWindowIndex int
 	NumberOfWindows   int
@@ -24,6 +26,7 @@ type Window struct {
 	ActiveDate      string
 	Path            string
 	Preview         string
+	PanePath          string
 	Session         string
 	IsActive        bool
 	IsExpanded      bool
@@ -48,6 +51,7 @@ type SessionData struct {
 	HasZoomedPane        bool
 	IsUsingKeybindings   bool
 	MaxSessionNameLength int
+	HistoryLimit         int
 	AttachedSession      string
 	TmintSession         string
 	Sessions             []Session
@@ -93,12 +97,13 @@ func getWindowPanes(windowPath string, session string) ([]Pane, int) {
 	return sliceOfPanes, activeIndex
 }
 
-func getSessionWindows(sessionName string) ([]Window, int) {
+func getSessionWindows(sessionName string) ([]Window, int, string) {
 	tmuxWindows := getTmuxWindowList(sessionName)
 	// Get last active window time (DATE ONLY for now)
 	//time.Unix(1588109472, 0)
 	sliceOfWindows := make([]Window, len(tmuxWindows))
 	activeIndex := 0
+	activeName := ""
 	// - Not currently being used
 	// look to delete
 
@@ -110,13 +115,15 @@ func getSessionWindows(sessionName string) ([]Window, int) {
 		window.Path = sessionName + ":" + window.Index
 		window.Panes, window.ActivePaneIndex = getWindowPanes(window.Path, window.Session)
 		window.Preview = window.Panes[window.ActivePaneIndex].Preview
+		window.PanePath = window.Panes[window.ActivePaneIndex].Path
 		sliceOfWindows[ind] = window
 
 		if window.IsActive {
 			activeIndex = ind
+			activeName = window.Name
 		}
 	}
-	return sliceOfWindows, activeIndex
+	return sliceOfWindows, activeIndex, activeName
 }
 
 func getNumberOfWindows(sessionString string) int {
@@ -142,6 +149,7 @@ func getNumberOfPanes(windowString string) int {
 func GetSessionData(currentSession string, tmintSession string, runFromKeybindings bool, result chan SessionData) {
 	sessionNameLimiter := 100
 	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0, TmintSession: tmintSession, IsUsingKeybindings: runFromKeybindings}
+	sessionData.HistoryLimit = getTmuxHistoryLimit()
 	tmuxLsList, tmuxIsRunning := getTmuxSessionList()
 
 	if tmuxIsRunning == false {
@@ -164,8 +172,9 @@ func GetSessionData(currentSession string, tmintSession string, runFromKeybindin
 			// Needed for tmux-keybindings workflow
 			session.IsAttached = true
 		}
-		session.Windows, session.ActiveWindowIndex = getSessionWindows(session.Name)
+		session.Windows, session.ActiveWindowIndex, session.ActiveWindowName = getSessionWindows(session.Name)
 		session.Preview = session.Windows[session.ActiveWindowIndex].Preview
+		session.PanePath = session.Windows[session.ActiveWindowIndex].PanePath
 		sliceOfSessions[ind] = session
 		sessionData.MaxSessionNameLength = getMaxInt(sessionData.MaxSessionNameLength, len(session.Name))
 	}

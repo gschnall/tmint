@@ -34,12 +34,16 @@ func setupCliApp() {
 			Required: false,
 		},
 		&cli.BoolFlag{
+			Name: "r", Usage: "Activates tmint resize pane interface",
+			Required: false,
+		},
+		&cli.BoolFlag{
 			Name:     "t",
 			Usage:    "Used for tmux-keybindings",
 			Required: false,
 		},
 		&cli.BoolFlag{
-			Name:     "r",
+			Name:     "u",
 			Usage:    "Used for tmux-keybindings",
 			Required: false,
 		},
@@ -62,6 +66,8 @@ func setupCliApp() {
 	app.Action = func(c *cli.Context) error {
 		if c.Bool("t") == true {
 			twiz.InitTmintForTmuxKeybindings(tmintSessionName)
+		} else if c.Bool("r") == true {
+			tmint.StartResizeInterface()
 		} else {
 			tmint.Start(c.Bool("p"), currentSessionName, tmintSessionName, c.Bool("r"))
 		}

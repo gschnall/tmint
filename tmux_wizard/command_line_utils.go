@@ -3,10 +3,17 @@ package tmux_wizard
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"strconv"
 	"strings"
+	"time"
+)
+
+var (
+	tmintDirName = ".tmux_interface"
 )
 
 // Command line Utils
@@ -86,10 +93,34 @@ func getTmuxCapturePane(panePath string) string {
 }
 
 func TmuxDisplayMessage(message string) string {
+	cmd := exec.Command("tmux", "display-message", "-F", message)
+	stdout, err := cmd.Output()
+	HandleExecError(err, "tmuxDisplayMessage")
+	return strings.TrimSpace(string(stdout))
+}
+func tmuxDisplayLongMessage(message string, count int) {
+	for {
+		if count <= 0 {
+			break
+		}
+		TmuxDisplayMessage(message)
+		time.Sleep(300 * time.Millisecond)
+		count -= 1
+	}
+}
+
+func TmuxGetMessage(message string) string {
 	cmd := exec.Command("tmux", "display-message", "-p", message)
 	stdout, err := cmd.Output()
 	HandleExecError(err, "tmuxDisplayMessage")
 	return strings.TrimSpace(string(stdout))
+}
+
+func getTmuxHistoryLimit() int {
+	historyLimitStr := TmuxGetMessage("#{history_limit}")
+	historyLimit, err := strconv.Atoi(historyLimitStr)
+	HandleExecError(err, "TmuxGetHistoryLimit")
+	return historyLimit
 }
 
 func SwitchToTmuxPath(path string) {
@@ -164,6 +195,27 @@ func tmuxSplitPaneH(panePath string) {
 	cmd := exec.Command("tmux", "split-window", "-d", "-h", "-c", "#{pane_current_path}", "-t", panePath)
 	_, err := cmd.Output()
 	HandleExecError(err, "tmuxSplitPaneH")
+}
+
+func TmuxResizePaneUp() {
+	cmd := exec.Command("tmux", "resize-pane", "-U")
+	_, err := cmd.Output()
+	HandleExecError(err, "tmuxResizePaneUp")
+}
+func TmuxResizePaneDown() {
+	cmd := exec.Command("tmux", "resize-pane", "-D")
+	_, err := cmd.Output()
+	HandleExecError(err, "tmuxResizePaneDown")
+}
+func TmuxResizePaneRight() {
+	cmd := exec.Command("tmux", "resize-pane", "-R")
+	_, err := cmd.Output()
+	HandleExecError(err, "tmuxResizePaneRight")
+}
+func TmuxResizePaneLeft() {
+	cmd := exec.Command("tmux", "resize-pane", "-L")
+	_, err := cmd.Output()
+	HandleExecError(err, "tmuxResizePaneLeft")
 }
 
 func CreateTmuxSession(name string, dir string, numberOfPanes int) {
@@ -256,5 +308,67 @@ func parsePaneString(paneString string) (bool, string, string, string) {
 }
 
 func getPanePreview(panePath string) string {
-	return getTmuxCapturePane(panePath)
+	// tmux capture-pane -pS -${1} -t "T mint:0.0" > ~/Documents/captured-stuff.sh
+	return strings.TrimSpace(getTmuxCapturePane(panePath))
 }
+
+func GetColoredPaneScrollback(panePath string, numberOfScrollbackLines int) string {
+	numberOfScrollbackLinesArg := "-" + strconv.Itoa(numberOfScrollbackLines)
+
+	cmd := exec.Command("tmux", "capture-pane", "-pe", "-S", numberOfScrollbackLinesArg, "-t", panePath)
+	stdout, err := cmd.Output()
+	HandleExecError(err, "GetColoredPaneScrollback")
+	return strings.TrimSpace(string(stdout))
+}
+
+func getPaneScrollback(panePath string, numberOfScrollbackLines int) string {
+	numberOfScrollbackLinesArg := "-" + strconv.Itoa(numberOfScrollbackLines)
+
+	cmd := exec.Command("tmux", "capture-pane", "-p", "-S", numberOfScrollbackLinesArg, "-t", panePath)
+	stdout, err := cmd.Output()
+	HandleExecError(err, "getPaneScrollback")
+	return strings.TrimSpace(string(stdout))
+}
+
+func generateTmintDirectory() string {
+	user, err := user.Current()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	homeDirectory := user.HomeDir
+
+	tmintDir := homeDirectory + "/" + tmintDirName
+	if _, err := os.Stat(tmintDir); os.IsNotExist(err) {
+		os.Mkdir(tmintDir, 0755)
+	}
+	return tmintDir
+}
+
+func SaveTmuxScrollback(panePath string, fileName string, saveToTmintDir bool, numberOfLinesToSave int) {
+	tmintDir := ""
+	if saveToTmintDir {
+		tmintDir = generateTmintDirectory() + "/"
+	}
+	// TODO: let user choose number of scrollback lines
+	paneScrollback := getPaneScrollback(panePath, numberOfLinesToSave)
+
+	filePath := tmintDir + fileName
+	f, err := os.Create(filePath)
+	if err != nil {
+		HandleExecError(err, "saveTmuxScrollback")
+		fmt.Println(err)
+	}
+	// close the file with defer
+	defer f.Close()
+
+	f.WriteString(paneScrollback)
+	tmuxDisplayLongMessage("File Saved: "+filePath, 4)
+}
+
+// func viewPaaneScrollback(panePath string) {
+
+// }
+
+// func editPaneScrollback(panePath string) {
+
+// }

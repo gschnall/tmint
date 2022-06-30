@@ -10,7 +10,6 @@ var (
 	helpBoxDisplayWidth = 0
 )
 
-
 func initHelpBoxDisplay() {
 	helpBoxDisplay.SetBorder(true)
 	helpBoxDisplay.SetBorderColor(tcell.ColorGreen)
@@ -26,8 +25,12 @@ func initHelpBoxDisplay() {
 		{"/", "search | Ctrl-s"},
 		{"s", "create session"},
 		{"w", "create window"},
+		{"d", "detach session"},
 		{"x", "delete target"},
 		{"r", "rename target"},
+		{"c", "tmux cheat sheet"},
+		{"v", "view scrollback history"},
+		{"f", "save scrollback to file"},
 		{"e", "toggle expand"},
 		{"+", "expand all"},
 		{"-", "collapse all"},

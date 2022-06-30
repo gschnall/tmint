@@ -248,15 +248,9 @@ func restoreDefaultView() {
 	}
 }
 
-func detachSession(node *tview.TreeNode) {
-	tmux := node.GetReference()
-	switch tmux.(type) {
-	case twiz.Session:
-		if tmux.(twiz.Session).IsAttached {
-			tviewApp.Stop()
-			twiz.DetachTmuxSession(tmux.(twiz.Session).Name)
-		}
-	}
+func detachSession(sessionName string) {
+	tviewApp.Stop()
+	twiz.DetachTmuxSession(sessionName)
 }
 
 // _______________
@@ -277,6 +271,8 @@ func initSessionDisplayKeys() {
 			collapseNode(sessionDisplay.GetCurrentNode(), false)
 		case tcell.KeyCtrlS:
 			toggleSearchBox()
+		case tcell.KeyEsc:
+			tviewApp.Stop()
 		}
 
 		switch event.Rune() {
@@ -286,7 +282,27 @@ func initSessionDisplayKeys() {
 			if event.Modifiers() == tcell.ModAlt {
 				highlightSessionNode(int(event.Rune()) - 87)
 			} else {
-				expandNode(sessionDisplay.GetCurrentNode(), true)
+				// -- Fixes vim navigation --
+				// l & h don't trigger a "changed" event for some reason
+				currentNode := sessionDisplay.GetCurrentNode()
+				expandNode(currentNode, true)
+				runCallbacksForNode(currentNode, handleChangeSession, handleChangeWindow, handleChangePane)
+			}
+		case 'h':
+			if event.Modifiers() == tcell.ModAlt {
+				highlightSessionNode(int(event.Rune()) - 87)
+			} else {
+				// -- Fixes vim navigation --
+				// l & h don't trigger a "changed" event for some reason
+				currentNode := sessionDisplay.GetCurrentNode()
+				collapseNode(sessionDisplay.GetCurrentNode(), true)
+				runCallbacksForNode(currentNode, handleChangeSession, handleChangeWindow, handleChangePane)
+			}
+		case 'c':
+			if event.Modifiers() == tcell.ModAlt {
+				highlightSessionNode(int(event.Rune()) - 87)
+			} else {
+				startCheatSheet()
 			}
 		case 'd':
 			if event.Modifiers() == tcell.ModAlt {
@@ -295,7 +311,7 @@ func initSessionDisplayKeys() {
 				// Work in progress
 				// - Detach should use the current session (not node)
 				// - Needs a way to cleanly exit before detaching
-				detachSession(sessionDisplay.GetCurrentNode())
+				detachSession(sessionData.AttachedSession)
 			}
 		case 'e':
 			if event.Modifiers() == tcell.ModAlt {
@@ -303,24 +319,29 @@ func initSessionDisplayKeys() {
 			} else {
 				cn := sessionDisplay.GetCurrentNode()
 				if cn.IsExpanded() {
-					cn.CollapseAll()
+					cn.Walk(func(node *tview.TreeNode, parent *tview.TreeNode) bool {
+						node.Collapse()
+						runCallbacksForNode(node, toggleSessionName, toggleWindowName, togglePaneName)
+						return true
+					})
 				} else {
-					cn.ExpandAll()
+					cn.Walk(func(node *tview.TreeNode, parent *tview.TreeNode) bool {
+						node.Expand()
+						runCallbacksForNode(node, toggleSessionName, toggleWindowName, togglePaneName)
+						return true
+					})
 				}
 			}
 		case '+', '=':
-			for _, child := range sessionDisplay.GetRoot().GetChildren() {
-				child.ExpandAll()
-			}
+			sessionDisplay.GetRoot().Walk(func(node *tview.TreeNode, parent *tview.TreeNode) bool {
+				node.Expand()
+				runCallbacksForNode(node, toggleSessionName, toggleWindowName, togglePaneName)
+				return true
+			})
 		case '-':
 			for _, child := range sessionDisplay.GetRoot().GetChildren() {
 				child.CollapseAll()
-			}
-		case 'h':
-			if event.Modifiers() == tcell.ModAlt {
-				highlightSessionNode(int(event.Rune()) - 87)
-			} else {
-				collapseNode(sessionDisplay.GetCurrentNode(), true)
+				runCallbacksForNode(child, toggleSessionName, toggleWindowName, togglePaneName)
 			}
 		case 'q':
 			if event.Modifiers() == tcell.ModAlt {
@@ -356,8 +377,32 @@ func initSessionDisplayKeys() {
 			} else {
 				startRenameForm()
 			}
+		case 'v':
+			if event.Modifiers() == tcell.ModAlt {
+				highlightSessionNode(int(event.Rune()) - 87)
+			} else {
+				// New function that'll allow user to select where to save captured scrollback
+				// What would you like to do with the scrollback history for pane ... ?
+				// - (Save) to a file
+				// - (View) with less
+				// - (Edit) in text editor
+				// startScrollbackHistoryForm()
+				expandPreviewDisplay()
+			}
+		case 'f':
+			if event.Modifiers() == tcell.ModAlt {
+				highlightSessionNode(int(event.Rune()) - 87)
+			} else {
+				startScrollbackHistoryForm(sessionDisplay.GetCurrentNode())
+			}
+		case 'a': // Temporary
+			if event.Modifiers() == tcell.ModAlt {
+				highlightSessionNode(int(event.Rune()) - 87)
+			} else {
+				go startLoadingModal("Load stuff")
+			}
 
-		case 'a', 'b', 'c', 'f', 'g', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 't', 'u', 'v', 'y', 'z':
+		case 'b', 'g', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 't', 'u', 'y', 'z':
 			if event.Modifiers() == tcell.ModAlt {
 				highlightSessionNode(int(event.Rune()) - 87)
 			}

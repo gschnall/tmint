@@ -9,12 +9,12 @@ import (
 func getPreviousNodeInTree(node *tview.TreeNode) *tview.TreeNode {
 	tmux := node.GetReference()
 
-	tmuxType := "session"	
+	tmuxType := "session"
 	switch tmux.(type) {
 	case twiz.Window:
-		tmuxType = "window" 
+		tmuxType = "window"
 	case twiz.Pane:
-		tmuxType = "pane" 
+		tmuxType = "pane"
 	}
 
 	parent := getParentOfNode(node)
@@ -30,7 +30,7 @@ func getPreviousNodeInTree(node *tview.TreeNode) *tview.TreeNode {
 			}
 
 			if tmuxType == "window" && index > 0 {
-				previousSib := getPreviousSibling(node)				
+				previousSib := getPreviousSibling(node)
 				if !previousSib.IsExpanded() {
 					return previousSib
 				}
@@ -42,7 +42,7 @@ func getPreviousNodeInTree(node *tview.TreeNode) *tview.TreeNode {
 				return getPreviousSibling(node)
 			}
 
-			return getParentOfNode(node) 
+			return getParentOfNode(node)
 		}
 	}
 	return node
@@ -61,18 +61,18 @@ func getLastVisibleChildNodeInSession(node *tview.TreeNode) *tview.TreeNode {
 	} else if node.IsExpanded() {
 		return lastWindow
 	}
-	return node 
+	return node
 }
 
 func getNextNodeInTree(node *tview.TreeNode) *tview.TreeNode {
 	tmux := node.GetReference()
 
-	tmuxType := "session"	
+	tmuxType := "session"
 	switch tmux.(type) {
 	case twiz.Window:
-		tmuxType = "window" 
+		tmuxType = "window"
 	case twiz.Pane:
-		tmuxType = "pane" 
+		tmuxType = "pane"
 	}
 
 	parent := getParentOfNode(node)
@@ -97,28 +97,28 @@ func getNextNodeInTree(node *tview.TreeNode) *tview.TreeNode {
 				return children[index+1]
 			} else if tmuxType == "window" || tmuxType == "session" {
 				return node.GetChildren()[0]
-			} 
+			}
 		}
 	}
 	return node
 }
 
 func getNextSibling(node *tview.TreeNode) *tview.TreeNode {
-	parent := getParentOfNode(node)	
+	parent := getParentOfNode(node)
 	children := parent.GetChildren()
 	for index, child := range children {
 		if child == node && index < len(children)-1 {
-			return children[index + 1]
+			return children[index+1]
 		}
 	}
 	return nil
 }
 func getPreviousSibling(node *tview.TreeNode) *tview.TreeNode {
-	parent := getParentOfNode(node)	
+	parent := getParentOfNode(node)
 	children := parent.GetChildren()
 	for index, child := range children {
 		if child == node {
-			return children[index - 1]
+			return children[index-1]
 		}
 	}
 	return nil
@@ -139,14 +139,13 @@ func getSessionFromNode(node *tview.TreeNode) *tview.TreeNode {
 }
 
 func getParentOfNode(node *tview.TreeNode) *tview.TreeNode {
-	root  := sessionDisplay.GetRoot()
+	root := sessionDisplay.GetRoot()
 	queue := make([]*tview.TreeNode, 0)
 	queue = append(queue, root)
 
 	for len(queue) > 0 {
-		parent := queue[0]	
+		parent := queue[0]
 		queue = queue[1:]
-
 
 		nextUpChildren := parent.GetChildren()
 		if len(nextUpChildren) > 0 {
