@@ -124,11 +124,9 @@ C-a ?     Display a list of shortcuts:
 // |                   |
 // ---------------------
 func startCheatSheet() {
-	// initCheatSheetDisplay()
 	changeViewTo(cheatSheetDisplay)
 }
 func endCheatSheet() {
-	cheatSheetDisplay.Clear()
 	restoreDefaultView()
 }
 
@@ -140,9 +138,7 @@ func endCheatSheet() {
 func initCheatSheetDisplayKeys() {
 	cheatSheetDisplay.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyEnter:
-			endCheatSheet()
-		case tcell.KeyEsc:
+		case tcell.KeyEnter, tcell.KeyEsc:
 			endCheatSheet()
 		}
 

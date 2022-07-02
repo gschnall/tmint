@@ -14,12 +14,12 @@ var (
 func initNoActiveSessionDisplay() {
 	inactiveSessionDisplay.SetTitle("Tmux has not been started")
 	inactiveSessionDisplay.SetBorder(true)
-  // Displayed Text
+	// Displayed Text
 	headerText := getTmintHeader() + "\n\n"
-	info   := "   No active sessions available\n\n\n"
-	start  := "   Press ENTER or 't' to start Tmux\n\n"
+	info := "   No active sessions available\n\n\n"
+	start := "   Press ENTER or 't' to start Tmux\n\n"
 	create := "   ----- 's' to create a session\n\n"
-	quit   := "   ----- 'q' to quit" 
+	quit := "   ----- 'q' to quit"
 	inactiveSessionDisplay.SetText(headerText + info + start + create + quit)
 
 	initNoActiveSessionDisplayKeys()
@@ -47,7 +47,7 @@ func getTmintHeader() string {
 func initNoActiveSessionDisplayKeys() {
 	inactiveSessionDisplay.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyEnter:
+		case tcell.KeyEnter, tcell.KeyEsc:
 			tviewApp.Stop()
 			twiz.StartTmux()
 		}
