@@ -26,7 +26,7 @@ type Window struct {
 	ActiveDate      string
 	Path            string
 	Preview         string
-	PanePath          string
+	PanePath        string
 	Session         string
 	IsActive        bool
 	IsExpanded      bool
@@ -149,13 +149,14 @@ func getNumberOfPanes(windowString string) int {
 func GetSessionData(currentSession string, tmintSession string, runFromKeybindings bool, result chan SessionData) {
 	sessionNameLimiter := 100
 	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0, TmintSession: tmintSession, IsUsingKeybindings: runFromKeybindings}
-	sessionData.HistoryLimit = getTmuxHistoryLimit()
 	tmuxLsList, tmuxIsRunning := getTmuxSessionList()
-
+	// No tmux Commands before this line, EXCEPTION: getTmuxSessionList
 	if tmuxIsRunning == false {
 		result <- sessionData
 		return
 	}
+	// History limit is number of scrollback lines
+	sessionData.HistoryLimit = getTmuxHistoryLimit()
 
 	if currentSession != ":" && runFromKeybindings {
 		tmuxLsList = tmuxLsList[:len(tmuxLsList)-1]
