@@ -14,6 +14,8 @@ func initHelpBoxDisplay() {
 	helpBoxDisplay.SetBorder(true)
 	helpBoxDisplay.SetBorderColor(tcell.ColorGreen)
 	helpBoxDisplay.SetTitle("KEYS")
+	helpBoxDisplay.SetTitleColor(tview.Styles.PrimaryTextColor)
+	helpBoxDisplay.SetBackgroundColor(tview.Styles.PrimitiveBackgroundColor)
 	helpBoxDisplay.SetTitleAlign(tview.AlignLeft)
 
 	helpTextList := [][]string{
@@ -38,7 +40,7 @@ func initHelpBoxDisplay() {
 	}
 
 	for ind, rowList := range helpTextList {
-		helpBoxDisplay.SetCell(ind, 0, tview.NewTableCell(rowList[0]).SetTextColor(tcell.ColorLightGreen))
+		helpBoxDisplay.SetCell(ind, 0, tview.NewTableCell(rowList[0]).SetTextColor(tview.Styles.TertiaryTextColor))
 		helpBoxDisplay.SetCell(ind, 1, tview.NewTableCell(rowList[1]))
 	}
 }

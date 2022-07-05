@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-
 	twiz "github.com/gschnall/tmint/tmux_wizard"
 
 	tcell "github.com/gdamore/tcell/v2"
@@ -16,7 +15,6 @@ var (
 	directoryInputField    = tview.NewInputField()
 	firstTabCompletionTerm = ""
 )
-
 
 func initDirectoryInputField() {
 	directoryInputField.SetText("~/")

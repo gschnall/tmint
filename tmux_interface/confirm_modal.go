@@ -7,9 +7,20 @@ var (
 	targetedNode *tview.TreeNode
 )
 
+func setConfirmModalColorTheme() {
+	confirmModal.
+		SetTextColor(tview.Styles.PrimaryTextColor).
+		SetButtonTextColor(tview.Styles.PrimitiveBackgroundColor).
+		SetButtonBackgroundColor(tview.Styles.InverseTextColor).
+		SetBackgroundColor(tview.Styles.ContrastSecondaryTextColor).
+		SetTitleColor(tview.Styles.PrimaryTextColor)
+}
+
 func initConfirmModal() {
 	confirmModal.SetTitle("ESC to Cancel")
 	confirmModal.SetBorder(true)
+
+	setConfirmModalColorTheme()
 
 	confirmModal.AddButtons([]string{"Yes", "No"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {

@@ -2,10 +2,9 @@ package tmux_interface
 
 import (
 	"fmt"
-	"time"
 	"os"
 	"strings"
-
+	"time"
 
 	twiz "github.com/gschnall/tmint/tmux_wizard"
 
@@ -19,6 +18,16 @@ var (
 	creationFormPaneCount = 0
 )
 
+func setCreationFormColorTheme() {
+	creationForm.SetBackgroundColor(tview.Styles.ContrastBackgroundColor)
+	creationForm.SetFieldTextColor(tview.Styles.PrimaryTextColor)
+	creationForm.SetFieldBackgroundColor(tview.Styles.ContrastSecondaryTextColor)
+	creationForm.SetLabelColor(tview.Styles.SecondaryTextColor)
+	creationForm.SetTitleColor(tview.Styles.PrimaryTextColor)
+	creationForm.SetButtonTextColor(tview.Styles.PrimitiveBackgroundColor)
+	creationForm.SetButtonBackgroundColor(tview.Styles.InverseTextColor)
+}
+
 func initCreationForm(creation string) {
 	creationForm.SetTitle("Create new " + creation)
 
@@ -30,9 +39,10 @@ func initCreationForm(creation string) {
 		for index, session := range sessionData.Sessions {
 			sessionNames = append(sessionNames, session.Name)
 			if session.Name == currentSessionName {
-				initialOption = index	
+				initialOption = index
 			}
 		}
+
 		creationForm.AddDropDown("Session", sessionNames, initialOption, func(s string, option int) {
 			creationFormSession = s
 		})
@@ -43,23 +53,25 @@ func initCreationForm(creation string) {
 			creationFormName = n
 		}).
 		AddFormItem(directoryInputField)
-		// -- Possibly a future feature: let users select # of panes --
-		// AddDropDown("Panes", []string{"1", "2", "3", "4"}, 0, func(option string, ind int) {
-		// 	creationFormPaneCount = ind + 1
-		// }).
-		// -- -------------------------- --
-		if creation == "window" {
-			creationForm.AddButton("Save", createNewWindow)
-			creationForm.SetFocus(1)
-		} else {
-			creationForm.AddButton("Save", createNewSession)
-		} 
-		creationForm.AddButton("Cancel", endCreateSession)
-	creationForm.SetBorder(true).SetTitle(fmt.Sprintf(" Create New %s | ESC to cancel | Ctrl-u to clear input ", creation)).SetTitleAlign(tview.AlignLeft)
+	// -- Thought: feature - let users select # of panes --
+	// AddDropDown("Panes", []string{"1", "2", "3", "4"}, 0, func(option string, ind int) {
+	// 	creationFormPaneCount = ind + 1
+	// }).
+	// -- -------------------------- --
+	if creation == "window" {
+		creationForm.AddButton("Save", createNewWindow)
+		creationForm.SetFocus(1)
+	} else {
+		creationForm.AddButton("Save", createNewSession)
+	}
+	creationForm.AddButton("Cancel", endCreateSession)
+	creationForm.SetBorder(true).SetTitle(fmt.Sprintf(" Create New %s | ESC to cancel ", creation)).SetTitleAlign(tview.AlignLeft)
 
 	creationForm.SetCancelFunc(func() {
 		endCreateSession()
 	})
+
+	setCreationFormColorTheme()
 }
 
 // _____________________

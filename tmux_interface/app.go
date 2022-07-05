@@ -60,10 +60,26 @@ func initInterface() {
 		AddPage("confirmModal", confirmModal, false, false).
 		AddPage("loadingModal", loadingModal, false, false)
 
-	flexBoxWrapper.SetBackgroundColor(tcell.ColorDefault)
+	// flexBoxWrapper.SetBackgroundColor(tcell.ColorDefault)
 
 	if err := tviewApp.SetRoot(flexBoxWrapper, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
+	}
+}
+
+func setTviewColorScheme() {
+	tview.Styles = tview.Theme{
+		PrimitiveBackgroundColor:    tcell.NewRGBColor(0, 0, 0),
+		ContrastBackgroundColor:     tcell.NewRGBColor(26, 28, 28),   // Dark Grey
+		MoreContrastBackgroundColor: tcell.NewRGBColor(68, 215, 168), // Green
+		BorderColor:                 tcell.NewRGBColor(255, 255, 255),
+		TitleColor:                  tcell.NewRGBColor(255, 255, 255),
+		GraphicsColor:               tcell.NewRGBColor(255, 255, 255),
+		PrimaryTextColor:            tcell.NewRGBColor(255, 255, 255),
+		SecondaryTextColor:          tcell.NewRGBColor(255, 222, 0),   // Yellow
+		TertiaryTextColor:           tcell.NewRGBColor(152, 251, 152), // Mint Green
+		InverseTextColor:            tcell.NewRGBColor(62, 164, 180),  // Mint Blue
+		ContrastSecondaryTextColor:  tcell.NewRGBColor(25, 102, 255),  // Blue
 	}
 }
 
@@ -81,6 +97,8 @@ func Start(doNotZoomPane bool, currentSession string, tmintSession string, runFr
 	dataResult := <-result
 	sessionData = dataResult
 	close(result)
+
+	setTviewColorScheme()
 
 	if sessionData.HasLivingSessions == false {
 		initNoActiveSessionInterface()

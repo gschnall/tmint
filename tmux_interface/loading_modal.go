@@ -3,7 +3,6 @@ package tmux_interface
 import (
 	"time"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -15,8 +14,9 @@ var (
 func initLoadingModal() {
 	loadingModal.SetTitle(" Loading ")
 	loadingModal.SetBorder(true)
-	loadingModal.SetBackgroundColor(tcell.ColorOrangeRed)
-	loadingModal.SetTextColor(tcell.ColorWhiteSmoke)
+
+	loadingModal.SetBackgroundColor(tview.Styles.ContrastBackgroundColor)
+	loadingModal.SetTextColor(tview.Styles.PrimaryTextColor)
 }
 
 // Use: go startLoadingModal("my message")

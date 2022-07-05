@@ -23,7 +23,8 @@ func initSessionDisplay() {
 		SetSelectable(false)
 	sessionDisplay.
 		SetRoot(root).
-		SetTopLevel(1)
+		SetTopLevel(1).
+		SetBackgroundColor(tview.Styles.PrimitiveBackgroundColor)
 	// BUG - https://github.com/rivo/tview/issues/314
 	// SetBackgroundColor(tcell.ColorDefault)
 	// --> Can't hide modals and highlighted colors seem strange
@@ -50,7 +51,7 @@ func initSessionDisplay() {
 			sessionDisplay.SetCurrentNode(sNode)
 		}
 		if session.IsAttached {
-			sNode.SetColor(tcell.ColorLimeGreen)
+			sNode.SetColor(tview.Styles.TertiaryTextColor)
 		}
 		root.AddChild(sNode)
 	}

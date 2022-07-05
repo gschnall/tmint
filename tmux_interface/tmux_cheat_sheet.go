@@ -11,7 +11,8 @@ var (
 
 func initCheatSheetDisplay() {
 	cheatSheetDisplay.SetDynamicColors(true)
-	cheatSheetDisplay.SetBackgroundColor(tcell.ColorDefault)
+	cheatSheetDisplay.SetBackgroundColor(tview.Styles.PrimitiveBackgroundColor)
+	cheatSheetDisplay.SetTextColor(tview.Styles.PrimaryTextColor)
 	cheatSheetDisplay.SetBorder(true).SetTitle(" Tmint | Cheat Sheet ").SetTitleAlign(0)
 	setupCheatSheetTextDisplay()
 	initCheatSheetDisplayKeys()

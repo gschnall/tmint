@@ -15,6 +15,14 @@ var (
 	searchBoxDisplayHeight = 0
 )
 
+func setSearchBoxColorTheme() {
+	searchBoxDisplay.SetBackgroundColor(tview.Styles.ContrastBackgroundColor)
+	searchBoxDisplay.SetFieldTextColor(tview.Styles.PrimaryTextColor)
+	searchBoxDisplay.SetFieldBackgroundColor(tview.Styles.ContrastSecondaryTextColor)
+	searchBoxDisplay.SetLabelColor(tview.Styles.SecondaryTextColor)
+	searchBoxDisplay.SetTitleColor(tview.Styles.PrimaryTextColor)
+}
+
 func initSearchBoxDisplay() {
 	searchBoxDisplay.
 		SetLabel("Search: ").
@@ -28,6 +36,7 @@ func initSearchBoxDisplay() {
 	})
 
 	initSearchDisplayKeys()
+	setSearchBoxColorTheme()
 }
 
 // _____________________

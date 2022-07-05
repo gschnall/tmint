@@ -9,12 +9,13 @@ import (
 var (
 	previewDisplay         = tview.NewTextView()
 	currentPreviewPanePath = ""
+	previewTitleMessage    = " | f : save to file"
 )
 
 func initPreviewDisplay() {
 	previewDisplay.SetDynamicColors(true)
 	previewDisplay.SetBackgroundColor(tcell.ColorDefault)
-	previewDisplay.SetBorder(true).SetTitle(" " + sessionData.Sessions[0].Name).SetTitleAlign(0)
+	previewDisplay.SetBorder(true).SetTitle(" " + sessionData.Sessions[0].Name + previewTitleMessage).SetTitleAlign(0)
 	previewDisplay.SetText(tview.TranslateANSI(sessionData.Sessions[0].Preview))
 	previewDisplay.SetScrollable(true)
 	previewDisplay.ScrollToEnd()
@@ -31,21 +32,21 @@ func handleChangeSession(session twiz.Session, node *tview.TreeNode) {
 	previewDisplay.ScrollToEnd()
 	previewDisplay.Clear()
 	previewDisplay.SetText(tview.TranslateANSI(session.Preview))
-	previewDisplay.SetTitle(" " + session.Name + " ")
+	previewDisplay.SetTitle(" " + session.Name + " " + previewTitleMessage)
 }
 func handleChangeWindow(window twiz.Window, node *tview.TreeNode) {
 	currentPreviewPanePath = window.PanePath
 	previewDisplay.ScrollToEnd()
 	previewDisplay.Clear()
 	previewDisplay.SetText(tview.TranslateANSI(window.Preview))
-	previewDisplay.SetTitle(" " + window.Index + " (" + window.Name + ")" + " ")
+	previewDisplay.SetTitle(" " + window.Index + " (" + window.Name + ")" + " " + previewTitleMessage)
 }
 func handleChangePane(pane twiz.Pane, node *tview.TreeNode) {
 	currentPreviewPanePath = pane.Path
 	previewDisplay.ScrollToEnd()
 	previewDisplay.Clear()
 	previewDisplay.SetText(tview.TranslateANSI(pane.Preview))
-	previewDisplay.SetTitle(" " + pane.Name + " - " + pane.Directory + " ")
+	previewDisplay.SetTitle(" " + pane.Name + " - " + pane.Directory + " " + previewTitleMessage)
 }
 
 // _____________________

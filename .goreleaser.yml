@@ -37,3 +37,14 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+# Homebrew
+brews:
+- tap:
+    owner: gschnall
+    name: homebrew-tap
+  folder: Formula
+  homepage: https://github.com/gschnall/tmint
+  description: "The missing Tmux interface. Manage sessions like a power user." 
+  skip_upload: auto
+  test: |
+    system "#{bin}/tmint", "--version"

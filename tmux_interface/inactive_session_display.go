@@ -33,7 +33,7 @@ func initNoActiveSessionDisplay() {
 func getTmintHeader() string {
 	h := "\n\n   :  :  : :   ::  ::  ::  :: :: :\n"
 	h += "   |___-_|-__-|-__|--_|--__--__--_--_-|\n"
-	h += "   -----| Tmint - a Tumux interface"
+	h += "   -----| tmint - a Tmux interface"
 	h += " > > >\n"
 	h += "   |___-_|-__-|-__|--_|--__--__--_--_-|\n"
 	return h

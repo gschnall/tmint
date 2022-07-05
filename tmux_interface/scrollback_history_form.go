@@ -16,6 +16,16 @@ var (
 	scrollbackHistoryLimit       = 2000
 )
 
+func setScrollbackHistoryFormColorTheme() {
+	scrollbackHistoryForm.SetBackgroundColor(tview.Styles.ContrastBackgroundColor)
+	scrollbackHistoryForm.SetFieldTextColor(tview.Styles.PrimaryTextColor)
+	scrollbackHistoryForm.SetFieldBackgroundColor(tview.Styles.ContrastSecondaryTextColor)
+	scrollbackHistoryForm.SetLabelColor(tview.Styles.SecondaryTextColor)
+	scrollbackHistoryForm.SetTitleColor(tview.Styles.PrimaryTextColor)
+	scrollbackHistoryForm.SetButtonTextColor(tview.Styles.PrimitiveBackgroundColor)
+	scrollbackHistoryForm.SetButtonBackgroundColor(tview.Styles.InverseTextColor)
+}
+
 func initScrollbackHistoryForm() {
 	scrollbackHistoryLimit = sessionData.HistoryLimit
 
@@ -57,6 +67,8 @@ func initScrollbackHistoryForm() {
 	scrollbackHistoryForm.AddButton("Cancel", endScrollbackHistoryForm)
 
 	scrollbackHistoryForm.SetCancelFunc(endScrollbackHistoryForm)
+
+	setScrollbackHistoryFormColorTheme()
 }
 
 // _____________________

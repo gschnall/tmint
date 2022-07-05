@@ -12,7 +12,8 @@ var (
 
 func initResizeDisplay() {
 	resizeDisplay.SetDynamicColors(true)
-	resizeDisplay.SetBackgroundColor(tcell.ColorDefault)
+	resizeDisplay.SetBackgroundColor(tview.Styles.PrimitiveBackgroundColor)
+	resizeDisplay.SetTextColor(tview.Styles.PrimaryTextColor)
 	resizeDisplay.SetBorder(true).SetTitle(" Tmint | Resize Pane ").SetTitleAlign(0)
 	setupResizeTextDisplay()
 

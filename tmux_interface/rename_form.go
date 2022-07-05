@@ -13,6 +13,16 @@ var (
 	renameFormName = ""
 )
 
+func setRenameFormColorTheme() {
+	renameForm.SetBackgroundColor(tview.Styles.ContrastBackgroundColor)
+	renameForm.SetFieldTextColor(tview.Styles.PrimaryTextColor)
+	renameForm.SetFieldBackgroundColor(tview.Styles.ContrastSecondaryTextColor)
+	renameForm.SetLabelColor(tview.Styles.SecondaryTextColor)
+	renameForm.SetTitleColor(tview.Styles.PrimaryTextColor)
+	renameForm.SetButtonTextColor(tview.Styles.PrimitiveBackgroundColor)
+	renameForm.SetButtonBackgroundColor(tview.Styles.InverseTextColor)
+}
+
 func initRenameForm() {
 	tmux := sessionDisplay.GetCurrentNode().GetReference()
 	targetName := ""
@@ -61,6 +71,8 @@ func initRenameForm() {
 	renameForm.SetCancelFunc(func() {
 		endRenameForm()
 	})
+
+	setRenameFormColorTheme()
 }
 
 // _____________________
