@@ -31,11 +31,9 @@ func initNoActiveSessionDisplay() {
 // |                   |
 // ---------------------
 func getTmintHeader() string {
-	h := "\n\n   :  :  : :   ::  ::  ::  :: :: :\n"
-	h += "   |___-_|-__-|-__|--_|--__--__--_--_-|\n"
-	h += "   -----| tmint - a Tmux interface"
-	h += " > > >\n"
-	h += "   |___-_|-__-|-__|--_|--__--__--_--_-|\n"
+	h := "\n\n:  :  : :   ::  ::  ::  :: :: : :  :  : \n"
+	h += "   -----| tmint - a Tmux interface\n"
+	h += ":  :  : :   ::  ::  ::  :: :: : :  :  : \n"
 	return h
 }
 
@@ -49,7 +47,6 @@ func initNoActiveSessionDisplayKeys() {
 		switch event.Key() {
 		case tcell.KeyEnter, tcell.KeyEsc:
 			tviewApp.Stop()
-			twiz.StartTmux()
 		}
 
 		switch event.Rune() {
