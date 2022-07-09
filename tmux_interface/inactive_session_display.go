@@ -45,7 +45,10 @@ func getTmintHeader() string {
 func initNoActiveSessionDisplayKeys() {
 	inactiveSessionDisplay.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyEnter, tcell.KeyEsc:
+		case tcell.KeyEnter:
+			tviewApp.Stop()
+			twiz.StartTmux()
+		case tcell.KeyEsc:
 			tviewApp.Stop()
 		}
 
