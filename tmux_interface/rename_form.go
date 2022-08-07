@@ -43,7 +43,8 @@ func initRenameForm() {
 		}
 		endRenameForm()
 		time.Sleep(200 * time.Millisecond)
-		refreshSessionDisplay()
+
+		refreshSessionDisplay(renameFormName, "window", "")
 	}
 	renameWindow := func() {
 		if renameFormName != "" {
@@ -51,7 +52,7 @@ func initRenameForm() {
 		}
 		endRenameForm()
 		time.Sleep(200 * time.Millisecond)
-		refreshSessionDisplay()
+		refreshSessionDisplay(renameFormName, "window", tmux.(twiz.Window).Path)
 	}
 
 	renameForm.SetTitle("Rename " + targetType + " " + targetName)

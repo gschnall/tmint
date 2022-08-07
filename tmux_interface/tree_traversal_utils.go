@@ -117,7 +117,7 @@ func getPreviousSibling(node *tview.TreeNode) *tview.TreeNode {
 	parent := getParentOfNode(node)
 	children := parent.GetChildren()
 	for index, child := range children {
-		if child == node {
+		if child == node && index > 0 {
 			return children[index-1]
 		}
 	}

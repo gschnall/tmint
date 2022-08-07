@@ -364,11 +364,3 @@ func SaveTmuxScrollback(panePath string, fileName string, saveToTmintDir bool, n
 	f.WriteString(paneScrollback)
 	tmuxDisplayLongMessage("File Saved: "+filePath, 4)
 }
-
-// func viewPaaneScrollback(panePath string) {
-
-// }
-
-// func editPaneScrollback(panePath string) {
-
-// }

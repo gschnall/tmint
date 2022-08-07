@@ -93,7 +93,7 @@ func StartResizeInterface() {
 
 func Start(doNotZoomPane bool, currentSession string, tmintSession string, runFromKeybindings bool) {
 	result := make(chan twiz.SessionData, 1)
-	go twiz.GetSessionData(currentSession, tmintSession, runFromKeybindings, result)
+	go twiz.GetSessionData(currentSession, tmintSession, runFromKeybindings, result, "", "", "")
 	dataResult := <-result
 	sessionData = dataResult
 	close(result)

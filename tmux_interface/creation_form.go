@@ -103,7 +103,7 @@ func createNewWindow() {
 	twiz.CreateTmuxWindow(creationFormName, directoryInputField.GetText(), creationFormPaneCount, creationFormSession)
 	endCreateSession()
 	time.Sleep(200 * time.Millisecond)
-	refreshSessionDisplay()
+	refreshSessionDisplay(creationFormName, "window", creationFormSession+":"+creationFormName)
 }
 
 func createNewSession() {
@@ -121,7 +121,7 @@ func createNewSession() {
 	twiz.CreateTmuxSession(creationFormName, directoryInputField.GetText(), creationFormPaneCount)
 	endCreateSession()
 	time.Sleep(200 * time.Millisecond)
-	refreshSessionDisplay()
+	refreshSessionDisplay(creationFormName, "session", "")
 }
 
 func tmuxNameIsValid(name string, lastChar rune) bool {

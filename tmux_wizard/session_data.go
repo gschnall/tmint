@@ -3,6 +3,7 @@ package tmux_wizard
 import (
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type Session struct {
@@ -15,6 +16,7 @@ type Session struct {
 	ActiveWindowIndex int
 	NumberOfWindows   int
 	IsAttached        bool
+	IsCurrentNode     bool
 	IsZoomed          bool
 	IsExpanded        bool
 	Windows           []Window
@@ -29,20 +31,23 @@ type Window struct {
 	PanePath        string
 	Session         string
 	IsActive        bool
+	IsCurrentNode   bool
 	IsExpanded      bool
 	ActivePaneIndex int
 	Panes           []Pane
 }
 
 type Pane struct {
-	Name      string
-	Path      string
-	Index     string
-	Command   string
-	Directory string
-	Session   string
-	IsActive  bool
-	Preview   string
+	Name          string
+	Path          string
+	Index         string
+	Command       string
+	Directory     string
+	Session       string
+	Window        string
+	IsActive      bool
+	IsCurrentNode bool
+	Preview       string
 }
 
 type SessionData struct {
@@ -75,9 +80,10 @@ func ToCharStr(i int) string {
 	return string('a' - 1 + i)
 }
 
-func getWindowPanes(windowPath string, session string) ([]Pane, int) {
+func getWindowPanes(windowPath string, session string, windowName string, selectedPanePath string) ([]Pane, int, bool) {
 	tmuxPanes := getTmuxPaneList(windowPath)
 	sliceOfPanes := make([]Pane, len(tmuxPanes))
+	hasSelectedCurrentPane := false
 	activeIndex := 0
 
 	for ind, paneString := range tmuxPanes {
@@ -85,23 +91,32 @@ func getWindowPanes(windowPath string, session string) ([]Pane, int) {
 
 		pane := Pane{IsActive: isActive, Index: paneIndex, Directory: dir, Command: command}
 		pane.Session = session
+		pane.Window = windowName
 		pane.Name = paneIndex
 		pane.Path = windowPath + "." + pane.Name
 		pane.Preview = getPanePreview(pane.Path)
-		sliceOfPanes[ind] = pane
+
+		if pane.Path == selectedPanePath {
+			hasSelectedCurrentPane = true
+			pane.IsCurrentNode = true
+		}
 
 		if pane.IsActive {
 			activeIndex = ind
 		}
+
+		sliceOfPanes[ind] = pane
 	}
-	return sliceOfPanes, activeIndex
+	return sliceOfPanes, activeIndex, hasSelectedCurrentPane
 }
 
-func getSessionWindows(sessionName string) ([]Window, int, string) {
+func getSessionWindows(sessionName string, selectedWindowPath string) ([]Window, int, string, bool) {
 	tmuxWindows := getTmuxWindowList(sessionName)
 	// Get last active window time (DATE ONLY for now)
 	//time.Unix(1588109472, 0)
 	sliceOfWindows := make([]Window, len(tmuxWindows))
+	hasSelectedCurrentNode := false
+	hasSelectedCurrentPane := false
 	activeIndex := 0
 	activeName := ""
 	// - Not currently being used
@@ -113,17 +128,27 @@ func getSessionWindows(sessionName string) ([]Window, int, string) {
 		window := Window{IsActive: isActive, Name: name, Index: windowInd}
 		window.Session = sessionName
 		window.Path = sessionName + ":" + window.Index
-		window.Panes, window.ActivePaneIndex = getWindowPanes(window.Path, window.Session)
+		window.Panes, window.ActivePaneIndex, hasSelectedCurrentPane = getWindowPanes(window.Path, window.Session, window.Name, selectedWindowPath)
 		window.Preview = window.Panes[window.ActivePaneIndex].Preview
 		window.PanePath = window.Panes[window.ActivePaneIndex].Path
-		sliceOfWindows[ind] = window
+
+		pathArr := strings.Split(selectedWindowPath, ":")
+		if window.Path == selectedWindowPath || (pathArr[0] == sessionName && pathArr[1] == window.Name) {
+			hasSelectedCurrentNode = true
+			window.IsCurrentNode = true
+		} else if hasSelectedCurrentPane {
+			window.IsExpanded = true
+			hasSelectedCurrentNode = true
+		}
 
 		if window.IsActive {
 			activeIndex = ind
 			activeName = window.Name
 		}
+
+		sliceOfWindows[ind] = window
 	}
-	return sliceOfWindows, activeIndex, activeName
+	return sliceOfWindows, activeIndex, activeName, hasSelectedCurrentNode
 }
 
 func getNumberOfWindows(sessionString string) int {
@@ -146,7 +171,7 @@ func getNumberOfPanes(windowString string) int {
 	return i
 }
 
-func GetSessionData(currentSession string, tmintSession string, runFromKeybindings bool, result chan SessionData) {
+func GetSessionData(currentSession string, tmintSession string, runFromKeybindings bool, result chan SessionData, targetName string, targetType string, targetPath string) {
 	sessionNameLimiter := 100
 	sessionData := SessionData{HasAttachedSession: false, MaxSessionNameLength: 0, TmintSession: tmintSession, IsUsingKeybindings: runFromKeybindings}
 	tmuxLsList, tmuxIsRunning := getTmuxSessionList()
@@ -163,6 +188,17 @@ func GetSessionData(currentSession string, tmintSession string, runFromKeybindin
 	}
 	sliceOfSessions := make([]Session, len(tmuxLsList))
 
+	// On refresh we want to set the selected node
+	selectedWindowPath := ""
+	selectedSessionName := ""
+	hasSelectedCurrentNode := false
+	if targetType == "session" {
+		selectedSessionName = targetName
+	} else {
+		// We need to make sure the session gets expanded
+		selectedWindowPath = targetPath
+	}
+
 	for ind, sessionString := range tmuxLsList {
 		isAttached, name, _, isZoomed := parseSessionString(sessionString)
 		session := Session{IsAttached: isAttached, Name: name, Id: ind, IsZoomed: isZoomed}
@@ -173,10 +209,17 @@ func GetSessionData(currentSession string, tmintSession string, runFromKeybindin
 			// Needed for tmux-keybindings workflow
 			session.IsAttached = true
 		}
-		session.Windows, session.ActiveWindowIndex, session.ActiveWindowName = getSessionWindows(session.Name)
+		session.Windows, session.ActiveWindowIndex, session.ActiveWindowName, hasSelectedCurrentNode = getSessionWindows(session.Name, selectedWindowPath)
 		session.Preview = session.Windows[session.ActiveWindowIndex].Preview
 		session.PanePath = session.Windows[session.ActiveWindowIndex].PanePath
+
+		if session.Name == selectedSessionName {
+			session.IsCurrentNode = true
+		} else if hasSelectedCurrentNode {
+			session.IsExpanded = true
+		}
 		sliceOfSessions[ind] = session
+
 		sessionData.MaxSessionNameLength = getMaxInt(sessionData.MaxSessionNameLength, len(session.Name))
 	}
 

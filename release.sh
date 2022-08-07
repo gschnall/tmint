@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+
+# Example
+# -------
+# ./release.sh 0.3.1 'Fix some bug'
+
 tag=$1
 message="$2"
 version="v$1"

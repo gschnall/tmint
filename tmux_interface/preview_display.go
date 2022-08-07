@@ -9,7 +9,7 @@ import (
 var (
 	previewDisplay         = tview.NewTextView()
 	currentPreviewPanePath = ""
-	previewTitleMessage    = " | f : save to file"
+	previewTitleMessage    = " | ESC (exit) | f (save) "
 )
 
 func initPreviewDisplay() {

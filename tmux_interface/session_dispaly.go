@@ -31,24 +31,35 @@ func initSessionDisplay() {
 
 	for sInd, session := range sessionData.Sessions {
 		sNode := tview.NewTreeNode(getSessionDisplayName(session, false))
-		sNode.SetSelectable(true).SetExpanded(false)
+		sNode.SetSelectable(true)
+		sNode.SetExpanded(session.IsExpanded)
 		sNode.SetReference(session)
+
+		if sInd == 0 || session.IsCurrentNode {
+			sessionDisplay.SetCurrentNode(sNode)
+			runCallbacksForNode(sNode, handleChangeSession, handleChangeWindow, handleChangePane)
+		}
 		for _, window := range session.Windows {
 			wNode := tview.NewTreeNode(getWindowDisplayName(window, false))
 			wNode.SetReference(window)
-			wNode.SetExpanded(false)
+			wNode.SetExpanded(window.IsExpanded)
 			wNode.SetSelectable(true)
 			wNode.SetIndent(6)
+			if window.IsCurrentNode {
+				sessionDisplay.SetCurrentNode(wNode)
+				runCallbacksForNode(wNode, handleChangeSession, handleChangeWindow, handleChangePane)
+			}
 			for _, pane := range window.Panes {
 				pNode := tview.NewTreeNode(getPaneDisplayName(pane))
 				pNode.SetReference(pane)
 				pNode.SetIndent(3)
 				wNode.AddChild(pNode)
+				if pane.IsCurrentNode {
+					sessionDisplay.SetCurrentNode(pNode)
+					runCallbacksForNode(pNode, handleChangeSession, handleChangeWindow, handleChangePane)
+				}
 			}
 			sNode.AddChild(wNode)
-		}
-		if sInd == 0 {
-			sessionDisplay.SetCurrentNode(sNode)
 		}
 		if session.IsAttached {
 			sNode.SetColor(tview.Styles.TertiaryTextColor)
@@ -91,9 +102,9 @@ func runCallbacksForNode(node *tview.TreeNode, sfunc SessionFunc, wfunc WindowFu
 	}
 }
 
-func refreshSessionDisplay() {
+func refreshSessionDisplay(targetName string, targetType string, targetPath string) {
 	result := make(chan twiz.SessionData, 1)
-	go twiz.GetSessionData(sessionData.AttachedSession, sessionData.TmintSession, sessionData.IsUsingKeybindings, result)
+	go twiz.GetSessionData(sessionData.AttachedSession, sessionData.TmintSession, sessionData.IsUsingKeybindings, result, targetName, targetType, targetPath)
 	dataResult := <-result
 	sessionData = dataResult
 	close(result)
@@ -222,13 +233,59 @@ func confirmKillPane(pane twiz.Pane, node *tview.TreeNode) {
 func killTmuxTarget(node *tview.TreeNode, killTarget bool) {
 	if killTarget {
 		runCallbacksForNode(node, handleKillSession, handleKillWindow, handleKillPane)
-		refreshSessionDisplay()
+		// Get previous node to select on refresh
+		tmux := node.GetReference()
+		switch tmux.(type) {
+		case twiz.Session:
+			prevNode := getPreviousNodeInTree(node).GetReference()
+			refreshSessionDisplay(prevNode.(twiz.Session).Name, "session", "")
+		case twiz.Window:
+			name, target, path := getNextNodeAfterKillWindow(node)
+			refreshSessionDisplay(name, target, path)
+		case twiz.Pane:
+			name, target, path := getNextNodeAfterKillPane(node)
+			refreshSessionDisplay(name, target, path)
+		}
 		flexBoxWrapper.HidePage("confirmModal")
 	} else {
 		targetedNode = node
 		runCallbacksForNode(node, confirmKillSession, confirmKillWindow, confirmKillPane)
 	}
 }
+
+func getNextNodeAfterKillWindow(node *tview.TreeNode) (string, string, string) {
+	prevSibling := getPreviousSibling(node)
+	nextSibling := getNextSibling(node)
+	if prevSibling == nil && nextSibling == nil {
+		session := getSessionFromNode(node)
+		prevSession := getPreviousSibling(session)
+		prevNode := prevSession.GetReference()
+		return prevNode.(twiz.Session).Name, "session", ""
+	} else if prevSibling != nil {
+		prevNode := prevSibling.GetReference()
+		return prevNode.(twiz.Window).Name, "window", prevNode.(twiz.Window).Path
+	} else if nextSibling != nil {
+		nextNode := nextSibling.GetReference()
+		return nextNode.(twiz.Window).Name, "window", nextNode.(twiz.Window).Path
+	}
+	return "", "", ""
+}
+func getNextNodeAfterKillPane(node *tview.TreeNode) (string, string, string) {
+	prevSibling := getPreviousSibling(node)
+	nextSibling := getNextSibling(node)
+	if prevSibling == nil && nextSibling == nil {
+		windowNode := getParentOfNode(node)
+		return getNextNodeAfterKillWindow(windowNode)
+	} else if prevSibling != nil {
+		prevNode := prevSibling.GetReference()
+		return prevNode.(twiz.Pane).Name, "pane", prevNode.(twiz.Pane).Path
+	} else if nextSibling != nil {
+		nextNode := nextSibling.GetReference()
+		return nextNode.(twiz.Pane).Name, "pane", nextNode.(twiz.Pane).Path
+	}
+	return "", "", ""
+}
+
 func confirmKillTarget(targetType string, targetName string) {
 	confirmModal.SetText("Kill " + targetType + " " + targetName + "?")
 	confirmModal.SetFocus(0)
