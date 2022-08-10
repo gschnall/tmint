@@ -1,7 +1,7 @@
 package tmux_interface
 
 import (
-	"regexp"
+	"strconv"
 	"strings"
 
 	tcell "github.com/gdamore/tcell/v2"
@@ -11,8 +11,13 @@ import (
 )
 
 var (
-	searchBoxDisplay       = tview.NewInputField()
-	searchBoxDisplayHeight = 0
+	searchBoxDisplay                         = tview.NewInputField()
+	searchBoxDisplayHeight                   = 0
+	searchBoxListOfResults                   = make([]*tview.TreeNode, 0)
+	searchBoxLiistOfResultsIndex             = 0
+	searchBoxWindowNodeShouldNotBeCollapsed  = true
+	searchBoxSessionNodeShouldNotBeCollapsed = true
+	searchBoxExpandedHistory                 = make([]*tview.TreeNode, 2) // session, window
 )
 
 func setSearchBoxColorTheme() {
@@ -20,7 +25,7 @@ func setSearchBoxColorTheme() {
 	searchBoxDisplay.SetFieldTextColor(tview.Styles.PrimaryTextColor)
 	searchBoxDisplay.SetFieldBackgroundColor(tview.Styles.ContrastSecondaryTextColor)
 	searchBoxDisplay.SetLabelColor(tview.Styles.SecondaryTextColor)
-	searchBoxDisplay.SetTitleColor(tview.Styles.PrimaryTextColor)
+	searchBoxDisplay.SetTitleColor(tview.Styles.TertiaryTextColor)
 }
 
 func initSearchBoxDisplay() {
@@ -28,15 +33,115 @@ func initSearchBoxDisplay() {
 		SetLabel("Search: ").
 		SetFieldWidth(32)
 	searchBoxDisplay.SetBorder(true)
-	searchBoxDisplay.SetChangedFunc(func(text string) {
-		searchedForNode := breadthFirstSearch(sessionDisplay.GetRoot(), text)
-		if searchedForNode != nil {
-			sessionDisplay.SetCurrentNode(searchedForNode)
-		}
-	})
+	searchBoxDisplay.SetChangedFunc(searchAndSelectNodeByText)
+	searchBoxDisplay.SetTitle("")
+	searchBoxDisplay.SetTitleAlign(0)
 
 	initSearchDisplayKeys()
 	setSearchBoxColorTheme()
+}
+
+func setSearchBoxResultsTitle() {
+	if len(searchBoxListOfResults) > 1 {
+		searchBoxDisplay.SetTitle(" Results: " + strconv.Itoa(searchBoxLiistOfResultsIndex+1) + " of " + strconv.Itoa(len(searchBoxListOfResults)) + " | CTRL-n next | CTRL-b back")
+	} else {
+		searchBoxDisplay.SetTitle(" Results: " + strconv.Itoa(searchBoxLiistOfResultsIndex+1) + " of " + strconv.Itoa(len(searchBoxListOfResults)) + " ")
+	}
+}
+
+func saveSearchBoxExpandedHistory(node *tview.TreeNode) {
+	tmux := node.GetReference()
+	switch tmux.(type) {
+	case twiz.Window:
+		sessionNode := getParentOfNode(node)
+		searchBoxSessionNodeShouldNotBeCollapsed = sessionNode.IsExpanded()
+		searchBoxWindowNodeShouldNotBeCollapsed = true
+		if sessionNode.IsExpanded() == false {
+			sessionNode.Expand()
+		}
+		searchBoxExpandedHistory[0] = sessionNode
+		searchBoxExpandedHistory[1] = node
+	case twiz.Pane:
+		windowNode := getParentOfNode(node)
+		sessionNode := getParentOfNode(windowNode)
+		searchBoxSessionNodeShouldNotBeCollapsed = sessionNode.IsExpanded()
+		searchBoxWindowNodeShouldNotBeCollapsed = windowNode.IsExpanded()
+		if sessionNode != nil && sessionNode.IsExpanded() == false {
+			sessionNode.Expand()
+		}
+		if windowNode != nil && windowNode.IsExpanded() == false {
+			windowNode.Expand()
+		}
+		searchBoxExpandedHistory[0] = sessionNode
+		searchBoxExpandedHistory[1] = windowNode
+	}
+}
+
+func undoSearchBoxExpandedHistory() {
+	if searchBoxSessionNodeShouldNotBeCollapsed == false {
+		searchBoxExpandedHistory[0].Collapse()
+	}
+	if searchBoxWindowNodeShouldNotBeCollapsed == false {
+		searchBoxExpandedHistory[1].Collapse()
+	}
+}
+
+func searchAndSelectNodeByText(text string) {
+	if text == "" {
+		searchBoxDisplay.SetTitle("")
+		return
+	}
+
+	searchBoxListOfResults, searchBoxLiistOfResultsIndex = breadthFirstTextSearch(sessionDisplay.GetRoot(), sessionDisplay.GetCurrentNode(), text)
+	if len(searchBoxListOfResults) > 0 {
+		if len(searchBoxListOfResults) < searchBoxLiistOfResultsIndex+1 {
+			searchBoxLiistOfResultsIndex = 0
+		}
+		currentSearchNode := searchBoxListOfResults[searchBoxLiistOfResultsIndex]
+
+		undoSearchBoxExpandedHistory()
+		saveSearchBoxExpandedHistory(currentSearchNode)
+		// expandAllNodeParents(currentSearchNode)
+
+		sessionDisplay.SetCurrentNode(currentSearchNode)
+		setSearchBoxResultsTitle()
+	} else {
+		searchBoxDisplay.SetTitle(" Results: 0 ")
+	}
+}
+
+func moveSearchSelectionForward() {
+	if len(searchBoxListOfResults) > 0 {
+		searchBoxLiistOfResultsIndex += 1
+		if searchBoxLiistOfResultsIndex >= len(searchBoxListOfResults) {
+			searchBoxLiistOfResultsIndex = 0
+		}
+		currentSearchNode := searchBoxListOfResults[searchBoxLiistOfResultsIndex]
+
+		undoSearchBoxExpandedHistory()
+		saveSearchBoxExpandedHistory(currentSearchNode)
+		// expandAllNodeParents(currentSearchNode)
+
+		sessionDisplay.SetCurrentNode(currentSearchNode)
+		setSearchBoxResultsTitle()
+	}
+}
+func moveSearchSelectionBack() {
+	if len(searchBoxListOfResults) > 0 {
+		searchBoxLiistOfResultsIndex -= 1
+		if searchBoxLiistOfResultsIndex < 0 {
+			searchBoxLiistOfResultsIndex = len(searchBoxListOfResults) - 1
+		}
+		currentSearchNode := searchBoxListOfResults[searchBoxLiistOfResultsIndex]
+
+		undoSearchBoxExpandedHistory()
+		saveSearchBoxExpandedHistory(currentSearchNode)
+		// expandAllNodeParents(currentSearchNode)
+
+		sessionDisplay.SetCurrentNode(currentSearchNode)
+		setSearchBoxResultsTitle()
+	}
+	// TODO: set some text about results somewhere here
 }
 
 // _____________________
@@ -45,6 +150,10 @@ func initSearchBoxDisplay() {
 // |                   |
 // ---------------------
 func toggleSearchBox() {
+	// Reset these values
+	searchBoxWindowNodeShouldNotBeCollapsed = true
+	searchBoxSessionNodeShouldNotBeCollapsed = true
+
 	height := searchBoxDisplayHeight
 	if height > 0 {
 		height = 0
@@ -58,15 +167,20 @@ func toggleSearchBox() {
 	mainFlexBoxView.ResizeItem(searchBoxDisplay, 0, height)
 }
 
-func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
+func breadthFirstTextSearch(root *tview.TreeNode, currentSelectedNode *tview.TreeNode, search string) ([]*tview.TreeNode, int) {
+	// Maybe only need contains...
+	// Starts with might be overkill
+	// TODO: investigate if depth first makes more sense to user
 	if search == "" {
-		return sessionDisplay.GetCurrentNode()
+		return make([]*tview.TreeNode, 0), 0
 	}
 	search = strings.ToLower(search)
 
 	queue := make([]*tview.TreeNode, 0)
 	queue = append(queue, root)
 
+	// matchStarts := []*tview.TreeNode{}
+	currentSelectedNodeIndex := 0
 	matchContains := []*tview.TreeNode{}
 
 	for len(queue) > 0 {
@@ -82,15 +196,18 @@ func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
 		case twiz.Window:
 			nodeName = strings.ToLower(getWindowDisplayName(tmux.(twiz.Window), nextUp.IsExpanded()))
 		case twiz.Pane:
-			// nodeName = strings.ToLower(tmux.(twiz.Pane).Name)
 			nodeName = strings.ToLower(getPaneDisplayName(tmux.(twiz.Pane)))
 		}
 
-		matchStart, _ := regexp.MatchString("(?i)^"+search, nodeName)
-		if matchStart {
-			return nextUp
-		} else if strings.Contains(nodeName, search) {
+		// matchStart, _ := regexp.MatchString("(?i)^"+search, nodeName)
+		// if matchStart {
+		// 	matchContains = append(matchStarts, nextUp)
+		if strings.Contains(nodeName, search) {
 			matchContains = append(matchContains, nextUp)
+		}
+
+		if nextUp == currentSelectedNode {
+			currentSelectedNodeIndex = len(matchContains)
 		}
 
 		nextUpChildren := nextUp.GetChildren()
@@ -102,9 +219,9 @@ func breadthFirstSearch(root *tview.TreeNode, search string) *tview.TreeNode {
 	}
 
 	if len(matchContains) > 0 {
-		return matchContains[0]
+		return matchContains, currentSelectedNodeIndex
 	}
-	return nil
+	return make([]*tview.TreeNode, 0), 0
 }
 
 // _______________
@@ -117,6 +234,10 @@ func initSearchDisplayKeys() {
 		switch event.Key() {
 		case tcell.KeyEnter, tcell.KeyCtrlS, tcell.KeyEsc:
 			toggleSearchBox()
+		case tcell.KeyCtrlN:
+			moveSearchSelectionForward()
+		case tcell.KeyCtrlB:
+			moveSearchSelectionBack()
 		}
 		return event
 	})
