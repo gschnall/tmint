@@ -19,7 +19,7 @@ Place the executable in your `/usr/local/bin` directory
 ### Linux
 
 ```shell
-wget -O tmint.tar.gz https://github.com/gschnall/tmint/releases/download/v0.4.0/tmint_0.4.0_Linux_x86_64.tar.gz && tar xvf tmint.tar.gz && mv tmint /usr/local/bin
+wget -O tmint.tar.gz https://github.com/gschnall/tmint/releases/download/v0.4.5/tmint_0.4.5_Linux_x86_64.tar.gz && tar xvf tmint.tar.gz && sudo mv tmint /usr/local/bin
 ```
 
 ### Mac & Windows
